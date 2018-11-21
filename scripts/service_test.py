@@ -8,10 +8,17 @@ try:
   req = ComponentsRequest()
   req.write = 1
   req.buffer = [1,0,0,0,1,1]
-  req.agv_slots = [0,0]
+  req.agv_slots = ['C2','C4']
   resp = sp(req)
   print(resp)
-except rp.ServiceException e:
+
+  req = ComponentsRequest()
+  req.write = 1
+  req.buffer = [1,0,0,0,0,0]
+  req.agv_slots = ['C2','']
+  resp = sp(req)
+  print(resp)
+except rp.ServiceException(e):
   print(e)
 
 try:
@@ -19,5 +26,5 @@ try:
   req.write = 0
   resp = sp(req)
   print(resp)
-except rp.ServiceException e:
+except rp.ServiceException(e):
   print(e)

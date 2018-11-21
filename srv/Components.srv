@@ -1,6 +1,6 @@
 uint32 write
 uint32[] buffer
-uint32[] agv_slots
+string[] agv_slots
 ---
 uint32[] buffer
-uint32[] agv_slots
+string[] agv_slots
