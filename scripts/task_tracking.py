@@ -2,6 +2,7 @@
 import rospy as rp
 from geometry_msgs.msg import Transform
 from agv_as18.msg import Waypoints, Task
+from agv_as18.srv import *
 
 #locations
 BEAST = ['BEAST',70.0,220.0]
@@ -18,6 +19,8 @@ MWP3 = ['MWP3',52.5,27.7] """
 
 task_sequence=[]
 b=[]
+buffer=[]
+agv_slots=[]
 
 def pos_cb(data):
   BEAST[1]=data.translation.x
@@ -37,8 +40,27 @@ def waypoints_cb(data):
     el.append(task.y)
     task_sequence.append(el)
 
+def fetch_cloud():
+  try:
+    resp = sp(ComponentsRequest())
+    return resp.buffer, resp.agv_slots
+  except rp.ServiceException(e):
+    print(e)
+
+def set_cloud(buffer, agv_slots):
+  try:
+    sp(ComponentsRequest(1, [1], ['C1']))
+  except rp.ServiceException(e):
+    print(e)
+
 rp.init_node('task_tracking')
 rp.Subscriber('local_pos_ref', Transform, pos_cb)
 rp.Subscriber('waypoints', Waypoints, waypoints_cb)
 #waypoint_pub = rp.Publisher('', , queue_size=1)
+rp.wait_for_service('components')
+sp = rp.ServiceProxy('components', Components)
+
+set_cloud([1,0,0,0,1,1], ['C2', 'C2'])
+buffer, agv_slots = fetch_cloud()
+
 rp.spin()

@@ -22,9 +22,9 @@ except rp.ServiceException(e):
   print(e)
 
 try:
-  req = ComponentsRequest()
-  req.write = 0
-  resp = sp(req)
-  print(resp)
+  #req = ComponentsRequest()
+  #req.write = 0
+  #resp = sp(req)
+  print(sp(ComponentsRequest()))
 except rp.ServiceException(e):
   print(e)
