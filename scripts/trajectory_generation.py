@@ -36,12 +36,21 @@ while not rp.is_shutdown():
     elif u_mag <= 0.01:
       v *= 0.0
       target.remove(P)
-      print('u_mag',u_mag)
+
+    # move this to controller
+    L = 0.17 # distance between two wheels
+    R = 0.04 # radius of wheel
+    omega = phi_e
+    omega_A = (2*v + omega * L)/(2*R)
+    omega_B = (2*v - omega * L)/(2*R)
+
     print('beast: ',beast)
     print('P: ',P)
     print('phi_e: ',phi_e)
     print('v: ',v)
+    print('A: ',omega_A)
+    print('B: ',omega_B)
     print('******')
   else:
-    print('no target')
+    # request new target list from task_tracking node
   rp.sleep(1)
