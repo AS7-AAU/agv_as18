@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 import rospy as rp
 from geometry_msgs.msg import Transform
-from agv_as18 import Reference
+from agv_as18.msg import Reference
 from math import sin, cos, pi, sqrt, atan2
 
-beast=[0,0,0]
-target=[[1,1]]
+beast=[5,5,pi/2]
+target=[[-3,-1]]
 max_speed = 1
 
 def pos_ref_cb(data):

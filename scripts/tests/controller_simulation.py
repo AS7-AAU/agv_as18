@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 import rospy as rp
 from geometry_msgs.msg import Transform
-from agv_as18 import Reference
+from agv_as18.msg import Reference
 from math import pi, sin, cos
+import rosbag
 
 v=0.0
 omega=0.0
@@ -22,6 +23,8 @@ rp.Subscriber('control_reference', Reference, ref_cb)
 pub = rp.Publisher('local_pos_ref', Transform, queue_size=1)
 #pub = rp.Publisher('', , queue_size=1)
 
+bag = rosbag.Bag('beast2.bag', 'w')
+
 r = rp.Rate(1/dt)
 while not rp.is_shutdown():
   # move this to controller
@@ -29,9 +32,9 @@ while not rp.is_shutdown():
   omega_B = (2*v - omega * L)/(2*R)
 
   global beast
-  beast[0] += v*cos(omega)*dt
-  beast[1] += v*sin(omega)*dt
   beast[2] += omega*dt
+  beast[0] += v*cos(beast[2])*dt
+  beast[1] += v*sin(beast[2])*dt
   
   msg = Transform()
   msg.translation.x = beast[0]
@@ -39,4 +42,7 @@ while not rp.is_shutdown():
   msg.rotation.z = beast[2]
   pub.publish(msg)
 
+  bag.write('beast', msg)
+
   r.sleep()
+bag.close()
