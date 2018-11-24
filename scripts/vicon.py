@@ -25,12 +25,12 @@ def cb(data):
 	    pub.publish(msg)
 	    
 	    quat = (msg.rotation.x,msg.rotation.y,msg.rotation.z,msg.rotation.w)
-            eul = euler_from_quaternion(quat)
+      eul = euler_from_quaternion(quat)
 	    eul = list(eul)
 	    eul[0] = degrees(eul[0])
 	    eul[1] = degrees(eul[1])
 	    eul[2] = degrees(eul[2])
-            rp.loginfo(eul)
+      rp.loginfo(eul)
 
 rp.init_node('vicon_test')
 rp.Subscriber('vicon/AS1/AS1', TransformStamped, cb)
