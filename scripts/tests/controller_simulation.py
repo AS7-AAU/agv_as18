@@ -10,7 +10,7 @@ omega=0.0
 L = 0.17 # distance between two wheels
 R = 0.04 # radius of wheel
 dt = 0.01
-beast = [0,0,0]
+beast = [5,5,pi/2]
 
 def ref_cb(data):
   global v
