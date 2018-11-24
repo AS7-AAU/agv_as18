@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 import rospy as rp
 from geometry_msgs.msg import Transform
-from math import sqrt, pi, atan, atan2
+from math import sin, cos, pi, atan, atan2
 
-beast=[0,0,pi/2]
-target=[[1,1]]
+beast=[0,0,0]
+target=[[1,0]]
 
 def pos_ref_cb(data):
   global beast
@@ -26,6 +26,8 @@ while not rp.is_shutdown():
     P = target[0]
     u = [P[0]-beast[0], P[1]-beast[1]]
     phi_d = atan2(u[1], u[0])
-    print(phi_d)
-    print(atan(u[1], u[0]))
+    e = phi_d - beast[2]
+    phi_e = atan2(sin(e),cos(e))
+    print(phi_e)
+    print(e)
     print('******')
