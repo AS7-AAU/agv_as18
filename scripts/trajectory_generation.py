@@ -4,7 +4,7 @@ from geometry_msgs.msg import Transform
 from agv_as18.msg import Reference
 from math import sin, cos, pi, sqrt, atan2
 
-beast=[5,5,pi/2]
+beast=[0,0,0]
 target=[[-3,-1]]
 max_speed = 1
 
@@ -32,18 +32,15 @@ while not rp.is_shutdown():
     e = phi_d - beast[2] # difference between desired and current heading
     phi_e = atan2(sin(e),cos(e)) # 4-quadrant angle of e
     v = max_speed
-    if u_mag <= 0.5 and u_mag > 0.01:
-      v *= u_mag
-    elif u_mag <= 0.01:
-      v *= 0.0
-      target.remove(P)
-
-    msg = Reference(v, phi_e)
-    pub.publish(msg)
-
-    print('beast: ',beast)
-    #print('P: ',P)
-    #print('phi_e: ',phi_e)
-    #print('v: ',v)
+    if len(target) == 1:
+      if u_mag <= 0.5 and u_mag > 0.01:
+        v *= u_mag
+      elif u_mag <= 0.01:
+        v *= 0.0
+        target.remove(P)
+    elif u_mag <= 0.05:
+        target.remove(P)
+        
+    pub.publish(Reference(v, phi_e))
   else:
     pass# request new target list from task_tracking node
