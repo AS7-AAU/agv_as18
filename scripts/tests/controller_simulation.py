@@ -23,7 +23,7 @@ rp.Subscriber('control_reference', Reference, ref_cb)
 pub = rp.Publisher('local_pos_ref', Transform, queue_size=1)
 #pub = rp.Publisher('', , queue_size=1)
 
-bag = rosbag.Bag('beast2.bag', 'w')
+bag = rosbag.Bag('beast3.bag', 'w')
 
 r = rp.Rate(1/dt)
 while not rp.is_shutdown():
