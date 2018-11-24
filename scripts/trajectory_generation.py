@@ -3,7 +3,7 @@ import rospy as rp
 from geometry_msgs.msg import Transform
 from math import sin, cos, pi, sqrt, atan2
 
-beast=[0,0,0]
+beast=[-1,0,-pi/2]
 target=[[1,0]]
 max_speed = 1
 
@@ -33,9 +33,10 @@ while not rp.is_shutdown():
     v = max_speed
     if u_mag <= 0.5 and u_mag > 0.01:
       v *= u_mag
-    else:
+    elif u_mag <= 0.01:
       v *= 0.0
       target.remove(P)
+      print('u_mag',u_mag)
     print('beast: ',beast)
     print('P: ',P)
     print('phi_e: ',phi_e)
@@ -43,3 +44,4 @@ while not rp.is_shutdown():
     print('******')
   else:
     print('no target')
+  rp.sleep(1)
