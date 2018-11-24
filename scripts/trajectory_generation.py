@@ -3,8 +3,8 @@ import rospy as rp
 from geometry_msgs.msg import Transform
 from math import sin, cos, pi, sqrt, atan2
 
-beast=[-1,0,-pi/2]
-target=[[1,0]]
+beast=[1,1,pi/2]
+target=[[1,4]]
 max_speed = 1
 
 def pos_ref_cb(data):
@@ -40,7 +40,7 @@ while not rp.is_shutdown():
     # move this to controller
     L = 0.17 # distance between two wheels
     R = 0.04 # radius of wheel
-    omega = phi_e
+    omega = phi_e # run error through PID to get omega
     omega_A = (2*v + omega * L)/(2*R)
     omega_B = (2*v - omega * L)/(2*R)
 
@@ -52,5 +52,5 @@ while not rp.is_shutdown():
     print('B: ',omega_B)
     print('******')
   else:
-    # request new target list from task_tracking node
+    pass# request new target list from task_tracking node
   rp.sleep(1)
