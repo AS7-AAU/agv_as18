@@ -1,17 +1,18 @@
 #!/usr/bin/env python
 import rospy as rp
 from geometry_msgs.msg import Transform
+from agv_as18 import Reference
 from math import sin, cos, pi, sqrt, atan2
 
-beast=[1,1,pi/2]
-target=[[1,4]]
+beast=[0,0,0]
+target=[[1,1]]
 max_speed = 1
 
 def pos_ref_cb(data):
   global beast
   beast[0] = data.translation.x # x-coordinate
   beast[1] = data.translation.y # y-coordinate
-  #beast[2] = data. # heading
+  beast[2] = data.rotation.z # heading
 
 def waypoints_cb(data):
   global target
@@ -20,7 +21,7 @@ def waypoints_cb(data):
 rp.init_node('trajectory_generation')
 rp.Subscriber('local_pos_ref', Transform, pos_ref_cb)
 #rp.Subscriber('', , waypoints_cb)
-#pub = rp.Publisher('', , queue_size=1)
+pub = rp.Publisher('control_reference', Reference, queue_size=1)
 
 while not rp.is_shutdown():
   if len(target) > 0:
@@ -37,20 +38,12 @@ while not rp.is_shutdown():
       v *= 0.0
       target.remove(P)
 
-    # move this to controller
-    L = 0.17 # distance between two wheels
-    R = 0.04 # radius of wheel
-    omega = phi_e # run error through PID to get omega
-    omega_A = (2*v + omega * L)/(2*R)
-    omega_B = (2*v - omega * L)/(2*R)
+    msg = Reference(v, phi_e)
+    pub.publish(msg)
 
     print('beast: ',beast)
-    print('P: ',P)
-    print('phi_e: ',phi_e)
-    print('v: ',v)
-    print('A: ',omega_A)
-    print('B: ',omega_B)
-    print('******')
+    #print('P: ',P)
+    #print('phi_e: ',phi_e)
+    #print('v: ',v)
   else:
     pass# request new target list from task_tracking node
-  rp.sleep(1)

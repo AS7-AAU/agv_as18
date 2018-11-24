@@ -51,6 +51,7 @@ add_message_files(
   Motor.msg
   Waypoints.msg
   Task.msg
+  Reference.msg
 )
 
 ## Generate services in the 'srv' folder

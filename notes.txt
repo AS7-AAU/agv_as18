@@ -1,0 +1,5 @@
+quat to eul:
+from tf.transformations import euler_from_quaternion
+quat = (pose.orientation.x,y,z,w)
+eul = euler_from_quaternion(quat)
+roll = eul[0]
