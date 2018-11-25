@@ -6,7 +6,6 @@ import sys
 import select
 
 def cb(data):
-    a = time.time()
     print ("You have five seconds to answer!")
 
     i, o, e = select.select( [sys.stdin], [], [], 5 )
@@ -18,8 +17,6 @@ def cb(data):
         pub.publish(msg)
     else:
         print ("Quality control passed!")
-    
-
 
 rp.init_node('quality_check')
 pub = rp.Publisher('qc',Bool,queue_size=1)
