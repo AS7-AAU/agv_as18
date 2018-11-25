@@ -23,6 +23,7 @@ buffer=[]
 agv_slots=[]
 
 def pos_cb(data):
+  global BEAST
   BEAST[1]=data.translation.x
   BEAST[2]=data.translation.y
 
@@ -44,13 +45,13 @@ def fetch_cloud():
   try:
     resp = sp(ComponentsRequest())
     return resp.buffer, resp.agv_slots
-  except rp.ServiceException(e):
+  except rp.ServiceException as e:
     print(e)
 
 def set_cloud(buffer, agv_slots):
   try:
     sp(ComponentsRequest(1, [1], ['C1']))
-  except rp.ServiceException(e):
+  except rp.ServiceException as e:
     print(e)
 
 rp.init_node('task_tracking')
