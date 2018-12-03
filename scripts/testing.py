@@ -274,8 +274,6 @@ while restart:
                     match = assembly_check(AS_storage_check,Product_List[0],C_storage_check)
                     if match[0] == True:
                         print("Product {} is getting assembled".format(Construction_List[0]))
-                        # Store the constructed product until it passes the quality check
-                        QC = Construction_List[0]
                         # Delete the product from the product list since the robot starts to gather components for the next product
                         del ProductList[0]
                         del Product_List[0]
@@ -304,121 +302,34 @@ while restart:
                             # If the product is faulty immediately check if there are already enough components in the assembly for the reconstruction to start immediately
                             AS_storage_check = list(AS_storage)
                             C_storage_check = list(C_storage)
-                            while assembly_check(AS_storage_check,Quality_List[0],C_storage_check)[0] == True:
-                                print("Product {} is getting reassembled".format(Construction_List[0]))
-                                AS_storage = assembly_check(AS_storage_check,Quality_List[0],C_storage_check)[1]
-                                C_storage = assembly_check(AS_storage_check,Quality_List[0],C_storage_check)[2]
-                                print("Quality Check")
-                                quality_answer = input("Is the product okay?")
-                                if quality_answer != '':
-                                    # product is ok
-                                    del Construction_List[0]
-                                    del Quality_List[0]
-                                    del QualityList[0]
-                                    break
-                                else:
-                                    # product is faulty
-                                    ProductList.insert(0,QualityList[0])
-                                    Product_List.insert(0,Quality_List[0])
-                                    # we must add in the task sequence the components of the product that was faulty
-                                    task_sequence = [(QualityList[0])[i] for i in range(len(QualityList[0]))] + task_sequence
-                                    
-                            b =[]
-                            k=0
-
-                            # In case of faulty product, check all the different scenarios that may occur
-                            print("Product added back to Construction List")
-                            # The robot is on the right side of the map and it does not carry anything
-                            if (BEAST[1] > 52.5) and (len(robot_items) == 0):
-                                
-                                components_not_stored = []
-                                components_stored = []
-                                AS_storage_check = list(AS_storage)
-                                for component in Quality_List[0]:
-                                    if component in AS_storage:
-                                        components_stored.append(component)
-                                        AS_storage_check.remove(component)
+                            if assembly_check(AS_storage_check,Quality_List[0],C_storage_check)[0] == True:
+                                while assembly_check(AS_storage_check,Quality_List[0],C_storage_check)[0] == True:
+                                    print("Product {} is getting reassembled".format(Construction_List[0]))
+                                    AS_storage = assembly_check(AS_storage_check,Quality_List[0],C_storage_check)[1]
+                                    C_storage = assembly_check(AS_storage_check,Quality_List[0],C_storage_check)[2]
+                                    print("Quality Check")
+                                    quality_answer = input("Is the product okay?")
+                                    if quality_answer != '':
+                                        # product is ok
+                                        del Construction_List[0]
+                                        del Quality_List[0]
+                                        del QualityList[0]
+                                        break
                                     else:
-                                        components_not_stored.append(component)
-                                
-                                if len(components_not_stored) == 1:
-                                    # put in the beginning of the list and recalculate the waypoint list
-                                    Quality_List[0] = Quality_List[0].insert(0, Quality_List[0].pop(Quality_List[0].index(components_not_stored[0])))
-                                    QualityList[0] = QualityList[0].insert(0, QualityList[0].pop(Quality_List[0].index(find_component(components_not_stored[0]))))
-                                else:
-                                    Quality_List[0] = Quality_List[0].insert(0, Quality_List[0].pop(Quality_List[0].index(components_not_stored[0])))
-                                    Quality_List[0] = Quality_List[0].insert(0, Quality_List[0].pop(Quality_List[0].index(components_not_stored[1])))
-                                    QualityList[0] = QualityList[0].insert(0, QualityList[0].pop(Quality_List[0].index(find_component(components_not_stored[0]))))
-                                    QualityList[0] = QualityList[0].insert(0, QualityList[0].pop(Quality_List[0].index(find_component(components_not_stored[1]))))
-                            
-                                ProductList.insert(0,QualityList[0])
-                                Product_List.insert(0,Quality_List[0])
+                                        # product is faulty
+                                        ProductList.insert(0,QualityList[0])
+                                        Product_List.insert(0,Quality_List[0])
+                                        # we must add in the task sequence the components of the product that was faulty
+                                        task_sequence = [(QualityList[0])[i] for i in range(len(QualityList[0]))] + task_sequence
+                                # if the robot is in the right side of the map and does not carry anything
+                                if (BEAST[1] > 52.5) and (len(robot_items) == 0):
 
-                                # insert the components of the faulty product in the beginning of the task sequence 
-                                task_sequence = [(QualityList[0])[i] for i in range(len(QualityList[0]))] + task_sequence
-                                task_sequence = list(filter(lambda a: a[0] != 'AS', task_sequence))
-                                z=2
-                                while z < len(task_sequence):
-                                    task_sequence.insert(z, AS)
-                                    z += 3
-                                task_sequence.append(AS)
-
-                                # Apply dijkstras for the new task sequence and create a new waypoint list
-                                for i in range(len(task_sequence)):
-
-                                    if BEAST[1] > 52.5:
-                                        graph = dict(graph_right)
-                                    else:
-                                        graph = dict(graph_left)
-
-
-                                    c = dijkstra(graph,BEAST[0],task_sequence[i][0])
-
-
-                                    for j in range(1,len(c)):
-                                        b.append(c[j])
-                                    BEAST[1] = task_sequence[i][1] 
-                                    BEAST[2] = task_sequence[i][2] 
-                                # exit the for loop and restart with the new waypoint list
-                                break
-                            # the robot is in the right side and it carries exactly one item (can happen only if it carries the last component for the last product)
-                            elif (BEAST[1] > 52.5) and (len(robot_items) == 1):
-                                # checking if there is space in the buffers
-                                if C_storage[components.index(robot_items[0])]<3:
-                                    # if there is space then unload the component
-                                    print("BEAST has arrived in the Assembly station")
-                                    print("BEAST is unloading")
-                                    del task_sequence[0]
-                                    AS_storage = AS_storage + robot_items
-                                    BEAST[1] = AS[1]
-                                    BEAST[2] = AS[2]
-
-                                    components_not_stored = []
-                                    components_stored = []
-                                    AS_storage_check = list(AS_storage)
-                                    for component in Quality_List[0]:
-                                        if component in AS_storage:
-                                            components_stored.append(component)
-                                            AS_storage_check.remove(component)
-                                        else:
-                                            components_not_stored.append(component)
-
-                                    if len(components_not_stored) == 1:
-                                        # put in the beginning of the list and recalculate the waypoint list
-                                        Quality_List[0] = Quality_List[0].insert(0, Quality_List[0].pop(Quality_List[0].index(components_not_stored[0])))
-                                        QualityList[0] = QualityList[0].insert(0, QualityList[0].pop(Quality_List[0].index(find_component(components_not_stored[0]))))
-                                    else:
-                                        Quality_List[0] = Quality_List[0].insert(0, Quality_List[0].pop(Quality_List[0].index(components_not_stored[0])))
-                                        Quality_List[0] = Quality_List[0].insert(0, Quality_List[0].pop(Quality_List[0].index(components_not_stored[1])))
-                                        QualityList[0] = QualityList[0].insert(0, QualityList[0].pop(Quality_List[0].index(find_component(components_not_stored[0]))))
-                                        QualityList[0] = QualityList[0].insert(0, QualityList[0].pop(Quality_List[0].index(find_component(components_not_stored[1]))))
-                            
-                                    
+                                    b=[]
 
                                     ProductList.insert(0,QualityList[0])
                                     Product_List.insert(0,Quality_List[0])
 
-                                    # insert the components of the faulty product in the beginning of the task sequence
+                                    # insert the components of the faulty product in the beginning of the task sequence 
                                     task_sequence = [(QualityList[0])[i] for i in range(len(QualityList[0]))] + task_sequence
                                     task_sequence = list(filter(lambda a: a[0] != 'AS', task_sequence))
                                     z=2
@@ -442,13 +353,54 @@ while restart:
                                         for j in range(1,len(c)):
                                             b.append(c[j])
                                         BEAST[1] = task_sequence[i][1] 
-                                        BEAST[2] = task_sequence[i][2]
+                                        BEAST[2] = task_sequence[i][2] 
+                                    # exit the for loop and restart with the new waypoint list
+                                    break
+                                # if the robot is on the right side of the map and it carries one component
+                                elif (BEAST[1] > 52.5) and (len(robot_items) == 1):
 
-                                # if there is no space in the buffers
-                                else :
-                                    # if the component is not needed for the faulty product
-                                    if robot_items[0] not in Quality_List[0]:
-                                        # create a temporary task sequence and find the fastest path to carry the component back to the storage station
+                                    b=[]    
+                                    # checking if there is space in the buffers
+                                    if C_storage[components.index(robot_items[0])]<3:
+                                        # if there is space then unload the component
+                                        print("BEAST has arrived in the Assembly station")
+                                        print("BEAST is unloading")
+                                        del task_sequence[0]
+                                        AS_storage = AS_storage + robot_items
+                                        BEAST[1] = AS[1]
+                                        BEAST[2] = AS[2]
+
+                                        ProductList.insert(0,QualityList[0])
+                                        Product_List.insert(0,Quality_List[0])
+
+                                        # insert the components of the faulty product in the beginning of the task sequence 
+                                        task_sequence = [(QualityList[0])[i] for i in range(len(QualityList[0]))] + task_sequence
+                                        task_sequence = list(filter(lambda a: a[0] != 'AS', task_sequence))
+                                        z=2
+                                        while z < len(task_sequence):
+                                            task_sequence.insert(z, AS)
+                                            z += 3
+                                        task_sequence.append(AS)
+
+                                        # Apply dijkstras for the new task sequence and create a new waypoint list
+                                        for i in range(len(task_sequence)):
+
+                                            if BEAST[1] > 52.5:
+                                                graph = dict(graph_right)
+                                            else:
+                                                graph = dict(graph_left)
+
+
+                                            c = dijkstra(graph,BEAST[0],task_sequence[i][0])
+
+
+                                            for j in range(1,len(c)):
+                                                b.append(c[j])
+                                            BEAST[1] = task_sequence[i][1] 
+                                            BEAST[2] = task_sequence[i][2]
+                                    # if there is no space in the buffers         
+                                    else:
+                                        # create a temporary task sequence for the robot to return the component for which there is no space
                                         temp_task_sequence = [find_component(robot_items[0])]
                                         graph = dict(graph_right)
 
@@ -470,106 +422,59 @@ while restart:
                                         
                                                 robot_items=[]
                                                 time.sleep(1)
-                                        # check how many of the components needed for the faulty product are not in the assembly storage
-                                        components_not_stored = []
-                                        components_stored = []
-                                        AS_storage_check = list(AS_storage)
-                                        for component in Quality_List[0]:
-                                            if component in AS_storage:
-                                                components_stored.append(component)
-                                                AS_storage_check.remove(component)
+                                        b=[]
+                                        ProductList.insert(0,QualityList[0])
+                                        Product_List.insert(0,Quality_List[0])
+
+                                        # insert the components of the faulty product in the beginning of the task sequence 
+                                        task_sequence = [(QualityList[0])[i] for i in range(len(QualityList[0]))] + task_sequence
+                                        task_sequence = list(filter(lambda a: a[0] != 'AS', task_sequence))
+                                        z=2
+                                        while z < len(task_sequence):
+                                            task_sequence.insert(z, AS)
+                                            z += 3
+                                        task_sequence.append(AS)
+
+                                        # Apply dijkstras for the new task sequence and create a new waypoint list
+                                        for i in range(len(task_sequence)):
+
+                                            if BEAST[1] > 52.5:
+                                                graph = dict(graph_right)
                                             else:
-                                                components_not_stored.append(component)
-                                        # if only one component is missing
-                                        if len(components_not_stored) == 1:
-                                            # put in the beginning of the list and recalculate the waypoint list
-                                            Quality_List[0] = Quality_List[0].insert(0, Quality_List[0].pop(Quality_List[0].index(components_not_stored[0])))
-                                            QualityList[0] = QualityList[0].insert(0, QualityList[0].pop(Quality_List[0].index(find_component(components_not_stored[0]))))
-                                            
-                                            
-                                            ProductList.insert(0,QualityList[0])
-                                            Product_List.insert(0,Quality_List[0])
-                                            task_sequence = [(QualityList[0])[i] for i in range(len(QualityList[0]))] + task_sequence
-                                            task_sequence = list(filter(lambda a: a[0] != 'AS', task_sequence))
-                                            
-                                            z=2
-                                            while z < len(task_sequence):
-                                                task_sequence.insert(z, AS)
-                                                z += 3
-                                            task_sequence.append(AS)
-                                            for i in range(len(task_sequence)):
-
-                                                if BEAST[1] > 52.5:
-                                                    graph = dict(graph_right)
-                                                else:
-                                                    graph = dict(graph_left)
+                                                graph = dict(graph_left)
 
 
-                                                c = dijkstra(graph,BEAST[0],task_sequence[i][0])
+                                            c = dijkstra(graph,BEAST[0],task_sequence[i][0])
 
 
-                                                for j in range(1,len(c)):
-                                                    b.append(c[j])
-                                                BEAST[1] = task_sequence[i][1] 
-                                                BEAST[2] = task_sequence[i][2]
-                                        # if more than one components are missing
-                                        else:
-                                            # add 2 of them in the beginning of the list and recalculate the waypoint list
-                                            Quality_List[0] = Quality_List[0].insert(0, Quality_List[0].pop(Quality_List[0].index(components_not_stored[0])))
-                                            Quality_List[0] = Quality_List[0].insert(0, Quality_List[0].pop(Quality_List[0].index(components_not_stored[1])))
-                                            QualityList[0] = QualityList[0].insert(0, QualityList[0].pop(Quality_List[0].index(find_component(components_not_stored[0]))))
-                                            QualityList[0] = QualityList[0].insert(0, QualityList[0].pop(Quality_List[0].index(find_component(components_not_stored[1]))))
-                                            
-                                            ProductList.insert(0,QualityList[0])
-                                            Product_List.insert(0,Quality_List[0])
-                                            task_sequence = [(QualityList[0])[i] for i in range(len(QualityList[0]))] + task_sequence
-                                            task_sequence = list(filter(lambda a: a[0] != 'AS', task_sequence))
-                                            
-                                            z=2
-                                            while z < len(task_sequence):
-                                                task_sequence.insert(z, AS)
-                                                z += 3
-                                            task_sequence.append(AS)
-                                            for i in range(len(task_sequence)):
+                                            for j in range(1,len(c)):
+                                                b.append(c[j])
+                                            BEAST[1] = task_sequence[i][1] 
+                                            BEAST[2] = task_sequence[i][2] 
+                                    break
 
-                                                if BEAST[1] > 52.5:
-                                                    graph = dict(graph_right)
-                                                else:
-                                                    graph = dict(graph_left)
+                                # If the robot is on the right side and it carries exactly 2 items
+                                elif (BEAST[1] > 52.5) and (len(robot_items) == 2):
+                                    b=[]
+                                    # If there is space in the buffers for the first component
+                                    if C_storage[components.index(robot_items[0])]<3:
+                                        C_storage_check = list(C_storage)
+                                        C_storage_check[components.index(robot_items[0])]+=1
+                                        # and if there is space for the second component too
+                                        if C_storage_check[components.index(robot_items[1])]<3:
+                                            print("BEAST has arrived in the Assembly station")
+                                            print("BEAST is unloading")
+                                            del task_sequence[0]
+                                            AS_storage = AS_storage + robot_items
+                                            BEAST[1] = AS[1]
+                                            BEAST[2] = AS[2]
 
-
-                                                c = dijkstra(graph,BEAST[0],task_sequence[i][0])
-
-
-                                                for j in range(1,len(c)):
-                                                    b.append(c[j])
-                                                BEAST[1] = task_sequence[i][1] 
-                                                BEAST[2] = task_sequence[i][2]
-                                        
-                                    # if the component is needed for the assembly of the faulty component
-                                    if robot_items[0] in Quality_List[0]:
-                                        # check how many of the components needed for the faulty product are not in the assembly storage
-                                        components_not_stored = []
-                                        components_stored = []
-                                        AS_storage_check = list(AS_storage)
-                                        for component in Quality_List[0]:
-                                            if component in AS_storage:
-                                                components_stored.append(component)
-                                                AS_storage_check.remove(component)
-                                            else:
-                                                components_not_stored.append(component)
-                                        
-                                        if len(components_not_stored) == 1:
-                                            Quality_List[0] = Quality_List[0].insert(0, Quality_List[0].pop(Quality_List[0].index(components_not_stored[0])))
-                                            QualityList[0] = QualityList[0].insert(0, QualityList[0].pop(Quality_List[0].index(find_component(components_not_stored[0]))))
-                                            b=[]
                                             ProductList.insert(0,QualityList[0])
                                             Product_List.insert(0,Quality_List[0])
                                             # insert the components of the faulty product in the beginning of the task sequence
                                             task_sequence = [(QualityList[0])[i] for i in range(len(QualityList[0]))] + task_sequence
                                             task_sequence = list(filter(lambda a: a[0] != 'AS', task_sequence))
-                                            
-                                            z=1
+                                            z=2
                                             while z < len(task_sequence):
                                                 task_sequence.insert(z, AS)
                                                 z += 3
@@ -591,8 +496,17 @@ while restart:
                                                     b.append(c[j])
                                                 BEAST[1] = task_sequence[i][1] 
                                                 BEAST[2] = task_sequence[i][2]
-                                        # if we are missing more tha one components
+                                        # If there is no space for the second component        
                                         else:
+                                            #unload only the first
+                                            print("BEAST has arrived in the Assembly station")
+                                            print("BEAST is unloading")
+                                            del task_sequence[0]
+                                            AS_storage = AS_storage + robot_items[0]
+                                            del robot_items[0]
+                                            BEAST[1] = AS[1]
+                                            BEAST[2] = AS[2]
+                                            
                                             # create a temporary task sequence and find the fastest path to carry the component back to the storage station
                                             temp_task_sequence = [find_component(robot_items[0])]
                                             graph = dict(graph_right)
@@ -616,22 +530,18 @@ while restart:
                                                     robot_items=[]
                                                     time.sleep(1)
                                             b=[]
-                                            # add 2 of them in the beginning of the list and recalculate the waypoint list
-                                            Quality_List[0] = Quality_List[0].insert(0, Quality_List[0].pop(Quality_List[0].index(components_not_stored[0])))
-                                            Quality_List[0] = Quality_List[0].insert(0, Quality_List[0].pop(Quality_List[0].index(components_not_stored[1])))
-                                            QualityList[0] = QualityList[0].insert(0, QualityList[0].pop(Quality_List[0].index(find_component(components_not_stored[0]))))
-                                            QualityList[0] = QualityList[0].insert(0, QualityList[0].pop(Quality_List[0].index(find_component(components_not_stored[1]))))
-                                            
                                             ProductList.insert(0,QualityList[0])
                                             Product_List.insert(0,Quality_List[0])
+                                            # insert the components of the faulty product in the beginning of the task sequence
                                             task_sequence = [(QualityList[0])[i] for i in range(len(QualityList[0]))] + task_sequence
                                             task_sequence = list(filter(lambda a: a[0] != 'AS', task_sequence))
-                                            
                                             z=2
                                             while z < len(task_sequence):
                                                 task_sequence.insert(z, AS)
                                                 z += 3
                                             task_sequence.append(AS)
+
+                                            # Apply dijkstras for the new task sequence and create a new waypoint list
                                             for i in range(len(task_sequence)):
 
                                                 if BEAST[1] > 52.5:
@@ -647,16 +557,501 @@ while restart:
                                                     b.append(c[j])
                                                 BEAST[1] = task_sequence[i][1] 
                                                 BEAST[2] = task_sequence[i][2]
-                                break            
-                            
-                            # If the robot is on the right side and it carries exactly 2 items
-                            elif (BEAST[1] > 52.5) and (len(robot_items) == 2):
-                                # If there is space in the buffers for the first component
-                                if C_storage[components.index(robot_items[0])]<3:
-                                    C_storage_check = list(C_storage)
-                                    C_storage_check[components.index(robot_items[0])]+=1
-                                    # and if there is space for the second component too
-                                    if C_storage_check[components.index(robot_items[1])]<3:
+                                    # if there is no space in the buffers for the first component            
+                                    else:
+                                        # If there is space for the second one
+                                        if C_storage_check[components.index(robot_items[1])]<3:
+                                            print("BEAST has arrived in the Assembly station")
+                                            print("BEAST is unloading")
+                                            del task_sequence[0]
+                                            AS_storage = AS_storage + robot_items[1]
+                                            del robot_items[1]
+                                            BEAST[1] = AS[1]
+                                            BEAST[2] = AS[2]
+                                            
+                                            # create a temporary task sequence and find the fastest path to carry the component back to the storage station
+                                            temp_task_sequence = [find_component(robot_items[0])]
+                                            graph = dict(graph_right)
+
+                                            c = dijkstra(graph,BEAST[0],temp_task_sequence[0][0])
+
+                                            for j in range(1,len(c)):
+                                                b.append(c[j])
+
+                                            for k in range(len(b)):
+                                                print("BEAST is moving towards: {}".format(b[k]))
+                                                time.sleep(1)
+                                                if b[k] == 'C1' or b[k] == 'C2' or b[k] == 'C3' or b[k] == 'C4' or b[k] == 'C5' or b[k] == 'C6' :
+                                                    print("BEAST has arrived in station: {}".format(b[k]))
+                                                    print("BEAST is unloading")
+
+                                                    task_sequence.insert(0,find_component(robot_items[0]))
+                                                    BEAST[1] = find_component(robot_items[0])[1]
+                                                    BEAST[2] = find_component(robot_items[0])[2]
+                                            
+                                                    robot_items=[]
+                                                    time.sleep(1)
+                                            b=[]
+                                            ProductList.insert(0,QualityList[0])
+                                            Product_List.insert(0,Quality_List[0])
+                                            # insert the components of the faulty product in the beginning of the task sequence
+                                            task_sequence = [(QualityList[0])[i] for i in range(len(QualityList[0]))] + task_sequence
+                                            task_sequence = list(filter(lambda a: a[0] != 'AS', task_sequence))
+                                            z=2
+                                            while z < len(task_sequence):
+                                                task_sequence.insert(z, AS)
+                                                z += 3
+                                            task_sequence.append(AS)
+
+                                            # Apply dijkstras for the new task sequence and create a new waypoint list
+                                            for i in range(len(task_sequence)):
+
+                                                if BEAST[1] > 52.5:
+                                                    graph = dict(graph_right)
+                                                else:
+                                                    graph = dict(graph_left)
+
+
+                                                c = dijkstra(graph,BEAST[0],task_sequence[i][0])
+
+
+                                                for j in range(1,len(c)):
+                                                    b.append(c[j])
+                                                BEAST[1] = task_sequence[i][1] 
+                                                BEAST[2] = task_sequence[i][2]
+                                        # if there is no space for the second component either
+                                        else:
+                                            temp_task_sequence = [find_component(robot_items[0]),find_component(robot_items[1])]
+                                            for i in range(len(temp_task_sequence)):
+                                                if BEAST[1] > 52.5:
+                                                    graph = dict(graph_right)
+                                                else:
+                                                    graph = dict(graph_left)
+                                                for j in range(1,len(c)):
+                                                    b.append(c[j])
+                                                for k in range(len(b)):
+                                                    print("BEAST is moving towards: {}".format(b[k]))
+                                                    time.sleep(1)
+                                                    if b[k] == 'C1' or b[k] == 'C2' or b[k] == 'C3' or b[k] == 'C4' or b[k] == 'C5' or b[k] == 'C6' :
+                                                        print("BEAST has arrived in station: {}".format(b[k]))
+                                                        print("BEAST is unloading")
+
+                                                        
+                                                        BEAST[1] = find_component(robot_items[0])[1]
+                                                        BEAST[2] = find_component(robot_items[0])[2]
+                                                        time.sleep(1)
+                                            task_sequence.insert(0,find_component(robot_items[0]))
+                                            task_sequence.insert(0,find_component(robot_items[1]))
+                                            robot_items=[]
+                                            b=[]
+                                            ProductList.insert(0,QualityList[0])
+                                            Product_List.insert(0,Quality_List[0])
+                                            # insert the components of the faulty product in the beginning of the task sequence
+                                            task_sequence = [(QualityList[0])[i] for i in range(len(QualityList[0]))] + task_sequence
+                                            task_sequence = list(filter(lambda a: a[0] != 'AS', task_sequence))
+                                            z=2
+                                            while z < len(task_sequence):
+                                                task_sequence.insert(z, AS)
+                                                z += 3
+                                            task_sequence.append(AS)
+
+                                            # Apply dijkstras for the new task sequence and create a new waypoint list
+                                            for i in range(len(task_sequence)):
+
+                                                if BEAST[1] > 52.5:
+                                                    graph = dict(graph_right)
+                                                else:
+                                                    graph = dict(graph_left)
+
+
+                                                c = dijkstra(graph,BEAST[0],task_sequence[i][0])
+
+
+                                                for j in range(1,len(c)):
+                                                    b.append(c[j])
+                                                BEAST[1] = task_sequence[i][1] 
+                                                BEAST[2] = task_sequence[i][2]
+                                    break
+                                # robot is in the left side and carries no components
+                                elif  (BEAST[1] < 52.5) and (len(robot_items) == 0):
+                                    b=[]
+                                    ProductList.insert(0,QualityList[0])
+                                    Product_List.insert(0,Quality_List[0])
+                                    task_sequence = [(QualityList[0])[i] for i in range(len(QualityList[0]))] + task_sequence
+                                    task_sequence = list(filter(lambda a: a[0] != 'AS', task_sequence))
+                                    
+                                    z=2
+                                    while z < len(task_sequence):
+                                        task_sequence.insert(z, AS)
+                                        z += 3
+                                    task_sequence.append(AS)
+                                    for i in range(len(task_sequence)):
+
+                                        if BEAST[1] > 52.5:
+                                            graph = dict(graph_right)
+                                        else:
+                                            graph = dict(graph_left)
+
+
+                                        c = dijkstra(graph,BEAST[0],task_sequence[i][0])
+
+
+                                        for j in range(1,len(c)):
+                                            b.append(c[j])
+                                        BEAST[1] = task_sequence[i][1] 
+                                        BEAST[2] = task_sequence[i][2]
+                                    break
+                                # robot is in the left side and carries one component
+                                elif  (BEAST[1] < 52.5) and (len(robot_items) == 1):
+                                    b=[]
+                                    # if the component is part of the product that is assembled
+                                    if robot_items[0] in Quality_List[0]:
+                                        Quality_List[0].append(robot_items[0])
+                                        Quality_List[0].remove([robot_items[0]])
+                                        QualityList[0].append(find_component(robot_items[0]))
+                                        QualityList[0].remove(find_component(robot_items[0]))
+
+                                        ProductList.insert(0,QualityList[0])
+                                        Product_List.insert(0,Quality_List[0])
+                                        task_sequence = [(QualityList[0])[i] for i in range(len(QualityList[0]))] + task_sequence
+                                        task_sequence = list(filter(lambda a: a[0] != 'AS', task_sequence))
+                                        
+                                        z=1
+                                        while z < len(task_sequence):
+                                            task_sequence.insert(z, AS)
+                                            z += 3
+                                        task_sequence.append(AS)
+                                        for i in range(len(task_sequence)):
+
+                                            if BEAST[1] > 52.5:
+                                                graph = dict(graph_right)
+                                            else:
+                                                graph = dict(graph_left)
+
+
+                                            c = dijkstra(graph,BEAST[0],task_sequence[i][0])
+
+
+                                            for j in range(1,len(c)):
+                                                b.append(c[j])
+                                            BEAST[1] = task_sequence[i][1] 
+                                            BEAST[2] = task_sequence[i][2]
+                                    # if the component is not part of the product assembled 
+                                    else:
+                                        #create a temporary task sequence to return the product to its storage station
+                                        temp_task_sequence = [find_component(robot_items[0])]
+                                        graph = dict(graph_right)
+
+                                        c = dijkstra(graph,BEAST[0],temp_task_sequence[0][0])
+
+                                        for j in range(1,len(c)):
+                                            b.append(c[j])
+
+                                        for k in range(len(b)):
+                                            print("BEAST is moving towards: {}".format(b[k]))
+                                            time.sleep(1)
+                                            if b[k] == 'C1' or b[k] == 'C2' or b[k] == 'C3' or b[k] == 'C4' or b[k] == 'C5' or b[k] == 'C6' :
+                                                print("BEAST has arrived in station: {}".format(b[k]))
+                                                print("BEAST is unloading")
+
+                                                task_sequence.insert(0,find_component(robot_items[0]))
+                                                BEAST[1] = find_component(robot_items[0])[1]
+                                                BEAST[2] = find_component(robot_items[0])[2]
+                                        
+                                                robot_items=[]
+                                                time.sleep(1)
+                                        b=[]
+                                        ProductList.insert(0,QualityList[0])
+                                        Product_List.insert(0,Quality_List[0])
+
+                                        # insert the components of the faulty product in the beginning of the task sequence 
+                                        task_sequence = [(QualityList[0])[i] for i in range(len(QualityList[0]))] + task_sequence
+                                        task_sequence = list(filter(lambda a: a[0] != 'AS', task_sequence))
+                                        z=2
+                                        while z < len(task_sequence):
+                                            task_sequence.insert(z, AS)
+                                            z += 3
+                                        task_sequence.append(AS)
+
+                                        # Apply dijkstras for the new task sequence and create a new waypoint list
+                                        for i in range(len(task_sequence)):
+
+                                            if BEAST[1] > 52.5:
+                                                graph = dict(graph_right)
+                                            else:
+                                                graph = dict(graph_left)
+
+
+                                            c = dijkstra(graph,BEAST[0],task_sequence[i][0])
+
+
+                                            for j in range(1,len(c)):
+                                                b.append(c[j])
+                                            BEAST[1] = task_sequence[i][1] 
+                                            BEAST[2] = task_sequence[i][2]
+                                
+                                
+                                    break
+                                # if the robot is on the left side and carries 2 components
+                                elif  (BEAST[1] < 52.5) and (len(robot_items) == 2):
+                                    b=[]
+                                    # if the first component is part of the product which is assembled
+                                    if robot_items[0] in Quality_List[0]:
+                                        Quality_List_check = list(Quality_List[0])
+                                        Quality_List_check.remove(robot_items[0])
+                                        # and if the second one is part of the product as well
+                                        if robot_items[1] in Quality_List_check:
+                                            b=[]
+                                            ProductList.insert(0,QualityList[0])
+                                            Product_List.insert(0,Quality_List[0])
+                                            task_sequence = [(QualityList[0])[i] for i in range(len(QualityList[0]))] + task_sequence
+                                            task_sequence = list(filter(lambda a: a[0] != 'AS', task_sequence))
+                                            
+                                            z=2
+                                            while z < len(task_sequence):
+                                                task_sequence.insert(z, AS)
+                                                z += 3
+                                            task_sequence.append(AS)
+                                            # the first task would be to bring the products that the robot carries to the assembly station
+                                            task_sequence.insert(0,AS)
+                                            for i in range(len(task_sequence)):
+
+                                                if BEAST[1] > 52.5:
+                                                    graph = dict(graph_right)
+                                                else:
+                                                    graph = dict(graph_left)
+
+
+                                                c = dijkstra(graph,BEAST[0],task_sequence[i][0])
+
+
+                                                for j in range(1,len(c)):
+                                                    b.append(c[j])
+                                                BEAST[1] = task_sequence[i][1] 
+                                                BEAST[2] = task_sequence[i][2]
+                                        # if the second component is not part of the product
+                                        else:
+                                            #put it back in its storage station
+                                            temp_task_sequence = [find_component(robot_items[1])]
+                                            graph = dict(graph_left)
+
+                                            c = dijkstra(graph,BEAST[0],temp_task_sequence[0][0])
+
+                                            for j in range(1,len(c)):
+                                                b.append(c[j])
+
+                                            for k in range(len(b)):
+                                                print("BEAST is moving towards: {}".format(b[k]))
+                                                time.sleep(1)
+                                                if b[k] == 'C1' or b[k] == 'C2' or b[k] == 'C3' or b[k] == 'C4' or b[k] == 'C5' or b[k] == 'C6' :
+                                                    print("BEAST has arrived in station: {}".format(b[k]))
+                                                    print("BEAST is unloading")
+
+                                                    task_sequence.insert(0,find_component(robot_items[0]))
+                                                    BEAST[1] = find_component(robot_items[0])[1]
+                                                    BEAST[2] = find_component(robot_items[0])[2]
+                                            
+                                                    robot_items=[]
+                                                    time.sleep(1)
+                                            b=[]
+                                            ProductList.insert(0,QualityList[0])
+                                            Product_List.insert(0,Quality_List[0])
+
+                                            # insert the components of the faulty product in the beginning of the task sequence 
+                                            task_sequence = [(QualityList[0])[i] for i in range(len(QualityList[0]))] + task_sequence
+                                            task_sequence = list(filter(lambda a: a[0] != 'AS', task_sequence))
+                                            z=1
+                                            while z < len(task_sequence):
+                                                task_sequence.insert(z, AS)
+                                                z += 3
+                                            task_sequence.append(AS)
+
+                                            # Apply dijkstras for the new task sequence and create a new waypoint list
+                                            for i in range(len(task_sequence)):
+
+                                                if BEAST[1] > 52.5:
+                                                    graph = dict(graph_right)
+                                                else:
+                                                    graph = dict(graph_left)
+
+
+                                                c = dijkstra(graph,BEAST[0],task_sequence[i][0])
+
+
+                                                for j in range(1,len(c)):
+                                                    b.append(c[j])
+                                                BEAST[1] = task_sequence[i][1] 
+                                                BEAST[2] = task_sequence[i][2]
+                                    # if both components that the robot carries are not part of the product that is assembled
+                                    elif robot_items[0] not in Quality_List[0] and robot_items[1] not in Quality_List[0]:
+                                        # put both back to their stations
+                                        temp_task_sequence = [find_component(robot_items[0]),find_component(robot_items[1])]
+                                        for i in range(len(temp_task_sequence)):
+                                            if BEAST[1] > 52.5:
+                                                graph = dict(graph_right)
+                                            else:
+                                                graph = dict(graph_left)
+                                            for j in range(1,len(c)):
+                                                b.append(c[j])
+                                            for k in range(len(b)):
+                                                print("BEAST is moving towards: {}".format(b[k]))
+                                                time.sleep(1)
+                                                if b[k] == 'C1' or b[k] == 'C2' or b[k] == 'C3' or b[k] == 'C4' or b[k] == 'C5' or b[k] == 'C6' :
+                                                    print("BEAST has arrived in station: {}".format(b[k]))
+                                                    print("BEAST is unloading")
+
+                                                    
+                                                    BEAST[1] = find_component(robot_items[0])[1]
+                                                    BEAST[2] = find_component(robot_items[0])[2]
+                                                    time.sleep(1)
+                                        task_sequence.insert(0,find_component(robot_items[0]))
+                                        task_sequence.insert(0,find_component(robot_items[1]))
+                                        robot_items=[]
+                                        b=[]
+                                        ProductList.insert(0,QualityList[0])
+                                        Product_List.insert(0,Quality_List[0])
+                                        task_sequence = [(QualityList[0])[i] for i in range(len(QualityList[0]))] + task_sequence
+                                        task_sequence = list(filter(lambda a: a[0] != 'AS', task_sequence))
+                                        
+                                        z=2
+                                        while z < len(task_sequence):
+                                            task_sequence.insert(z, AS)
+                                            z += 3
+                                        task_sequence.append(AS)
+                                        task_sequence.insert(0,AS)
+                                        for i in range(len(task_sequence)):
+
+                                            if BEAST[1] > 52.5:
+                                                graph = dict(graph_right)
+                                            else:
+                                                graph = dict(graph_left)
+
+
+                                            c = dijkstra(graph,BEAST[0],task_sequence[i][0])
+
+
+                                            for j in range(1,len(c)):
+                                                b.append(c[j])
+                                            BEAST[1] = task_sequence[i][1] 
+                                            BEAST[2] = task_sequence[i][2]
+                                    # if the first component is not part of the product and the second one is
+                                    elif robot_items[0] not in Quality_List[0] and robot_items[1] in Quality_List[0]:
+                                        # put the first one back to its station
+                                        temp_task_sequence = [find_component(robot_items[0])]
+                                        graph = dict(graph_left)
+
+                                        c = dijkstra(graph,BEAST[0],temp_task_sequence[0][0])
+
+                                        for j in range(1,len(c)):
+                                            b.append(c[j])
+
+                                        for k in range(len(b)):
+                                            print("BEAST is moving towards: {}".format(b[k]))
+                                            time.sleep(1)
+                                            if b[k] == 'C1' or b[k] == 'C2' or b[k] == 'C3' or b[k] == 'C4' or b[k] == 'C5' or b[k] == 'C6' :
+                                                print("BEAST has arrived in station: {}".format(b[k]))
+                                                print("BEAST is unloading")
+
+                                                task_sequence.insert(0,find_component(robot_items[0]))
+                                                BEAST[1] = find_component(robot_items[0])[1]
+                                                BEAST[2] = find_component(robot_items[0])[2]
+                                        
+                                                robot_items=[]
+                                                time.sleep(1)
+                                        b=[]
+                                        ProductList.insert(0,QualityList[0])
+                                        Product_List.insert(0,Quality_List[0])
+
+                                        # insert the components of the faulty product in the beginning of the task sequence 
+                                        task_sequence = [(QualityList[0])[i] for i in range(len(QualityList[0]))] + task_sequence
+                                        task_sequence = list(filter(lambda a: a[0] != 'AS', task_sequence))
+                                        z=1
+                                        while z < len(task_sequence):
+                                            task_sequence.insert(z, AS)
+                                            z += 3
+                                        task_sequence.append(AS)
+
+                                        # Apply dijkstras for the new task sequence and create a new waypoint list
+                                        for i in range(len(task_sequence)):
+
+                                            if BEAST[1] > 52.5:
+                                                graph = dict(graph_right)
+                                            else:
+                                                graph = dict(graph_left)
+
+
+                                            c = dijkstra(graph,BEAST[0],task_sequence[i][0])
+
+
+                                            for j in range(1,len(c)):
+                                                b.append(c[j])
+                                            BEAST[1] = task_sequence[i][1] 
+                                            BEAST[2] = task_sequence[i][2]
+                                        break
+                            # if we do not have enough components to restart assembly immediately
+                            else:
+                                b =[]
+                                k=0
+                                # The robot is on the right side of the map and it does not carry anything
+                                if (BEAST[1] > 52.5) and (len(robot_items) == 0):
+                                    # find which components are missing from the assembly station in order to start the reassembly
+                                    components_not_stored = []
+                                    components_stored = []
+                                    AS_storage_check = list(AS_storage)
+                                    for component in Quality_List[0]:
+                                        if component in AS_storage:
+                                            components_stored.append(component)
+                                            AS_storage_check.remove(component)
+                                        else:
+                                            components_not_stored.append(component)
+                                    # if only one component is missing
+                                    if len(components_not_stored) == 1:
+                                        # put in the beginning of the list and recalculate the waypoint list
+                                        Quality_List[0].insert(0, Quality_List[0].pop(Quality_List[0].index(components_not_stored[0])))
+                                        QualityList[0].insert(0, QualityList[0].pop(QualityList[0].index(find_component(components_not_stored[0]))))
+                                    # if more than one components are missing
+                                    else:
+                                        # put two of them in the beginning of the list and recalculate the waypoint list
+                                        Quality_List[0].insert(0, Quality_List[0].pop(Quality_List[0].index(components_not_stored[0])))
+                                        Quality_List[0].insert(0, Quality_List[0].pop(Quality_List[0].index(components_not_stored[1])))
+                                        QualityList[0].insert(0, QualityList[0].pop(QualityList[0].index(find_component(components_not_stored[0]))))
+                                        QualityList[0].insert(0, QualityList[0].pop(QualityList[0].index(find_component(components_not_stored[1]))))
+                                
+                                    ProductList.insert(0,QualityList[0])
+                                    Product_List.insert(0,Quality_List[0])
+
+                                    # insert the components of the faulty product in the beginning of the task sequence 
+                                    task_sequence = [(QualityList[0])[i] for i in range(len(QualityList[0]))] + task_sequence
+                                    task_sequence = list(filter(lambda a: a[0] != 'AS', task_sequence))
+                                    z=2
+                                    while z < len(task_sequence):
+                                        task_sequence.insert(z, AS)
+                                        z += 3
+                                    task_sequence.append(AS)
+
+                                    # Apply dijkstras for the new task sequence and create a new waypoint list
+                                    for i in range(len(task_sequence)):
+
+                                        if BEAST[1] > 52.5:
+                                            graph = dict(graph_right)
+                                        else:
+                                            graph = dict(graph_left)
+
+
+                                        c = dijkstra(graph,BEAST[0],task_sequence[i][0])
+
+
+                                        for j in range(1,len(c)):
+                                            b.append(c[j])
+                                        BEAST[1] = task_sequence[i][1] 
+                                        BEAST[2] = task_sequence[i][2] 
+                                    # exit the for loop and restart with the new waypoint list
+                                    break
+                                # the robot is in the right side and it carries exactly one item (can happen only if it carries the last component for the last product)
+                                elif (BEAST[1] > 52.5) and (len(robot_items) == 1):
+                                    # checking if there is space in the buffers
+                                    if C_storage[components.index(robot_items[0])]<3:
+                                        # if there is space then unload the component
                                         print("BEAST has arrived in the Assembly station")
                                         print("BEAST is unloading")
                                         del task_sequence[0]
@@ -664,8 +1059,32 @@ while restart:
                                         BEAST[1] = AS[1]
                                         BEAST[2] = AS[2]
 
+                                        components_not_stored = []
+                                        components_stored = []
+                                        AS_storage_check = list(AS_storage)
+                                        for component in Quality_List[0]:
+                                            if component in AS_storage:
+                                                components_stored.append(component)
+                                                AS_storage_check.remove(component)
+                                            else:
+                                                components_not_stored.append(component)
+
+                                        if len(components_not_stored) == 1:
+                                            # put in the beginning of the list and recalculate the waypoint list
+                                            Quality_List[0].insert(0, Quality_List[0].pop(Quality_List[0].index(components_not_stored[0])))
+                                            QualityList[0].insert(0, QualityList[0].pop(Quality_List[0].index(find_component(components_not_stored[0]))))
+                                        else:
+                                            # put two of them in the beginning of the list and recalculate the waypoint list
+                                            Quality_List[0].insert(0, Quality_List[0].pop(Quality_List[0].index(components_not_stored[0])))
+                                            Quality_List[0].insert(0, Quality_List[0].pop(Quality_List[0].index(components_not_stored[1])))
+                                            QualityList[0].insert(0, QualityList[0].pop(QualityList[0].index(find_component(components_not_stored[0]))))
+                                            QualityList[0].insert(0, QualityList[0].pop(QualityList[0].index(find_component(components_not_stored[1]))))
+                                
+                                        
+
                                         ProductList.insert(0,QualityList[0])
                                         Product_List.insert(0,Quality_List[0])
+
                                         # insert the components of the faulty product in the beginning of the task sequence
                                         task_sequence = [(QualityList[0])[i] for i in range(len(QualityList[0]))] + task_sequence
                                         task_sequence = list(filter(lambda a: a[0] != 'AS', task_sequence))
@@ -691,15 +1110,10 @@ while restart:
                                                 b.append(c[j])
                                             BEAST[1] = task_sequence[i][1] 
                                             BEAST[2] = task_sequence[i][2]
-                                    # if there is no space for the second component
-                                    else:
-                                        print("BEAST has arrived in the Assembly station")
-                                        print("BEAST is unloading")
-                                        del task_sequence[0]
-                                        AS_storage = AS_storage + robot_items[0]
-                                        del robot_items[0]
-                                        BEAST[1] = AS[1]
-                                        BEAST[2] = AS[2]
+
+                                    # if there is no space in the buffers
+                                    else :
+                                        # if the component is not needed for the faulty product
                                         if robot_items[0] not in Quality_List[0]:
                                             # create a temporary task sequence and find the fastest path to carry the component back to the storage station
                                             temp_task_sequence = [find_component(robot_items[0])]
@@ -723,6 +1137,202 @@ while restart:
                                             
                                                     robot_items=[]
                                                     time.sleep(1)
+                                            # check how many of the components needed for the faulty product are not in the assembly storage
+                                            components_not_stored = []
+                                            components_stored = []
+                                            AS_storage_check = list(AS_storage)
+                                            for component in Quality_List[0]:
+                                                if component in AS_storage:
+                                                    components_stored.append(component)
+                                                    AS_storage_check.remove(component)
+                                                else:
+                                                    components_not_stored.append(component)
+                                            # if only one component is missing
+                                            if len(components_not_stored) == 1:
+                                                b=[]
+                                                # put in the beginning of the list and recalculate the waypoint list
+                                                Quality_List[0].insert(0, Quality_List[0].pop(Quality_List[0].index(components_not_stored[0])))
+                                                QualityList[0].insert(0, QualityList[0].pop(QualityList[0].index(find_component(components_not_stored[0]))))
+                                                
+                                                
+                                                ProductList.insert(0,QualityList[0])
+                                                Product_List.insert(0,Quality_List[0])
+                                                task_sequence = [(QualityList[0])[i] for i in range(len(QualityList[0]))] + task_sequence
+                                                task_sequence = list(filter(lambda a: a[0] != 'AS', task_sequence))
+                                                
+                                                z=2
+                                                while z < len(task_sequence):
+                                                    task_sequence.insert(z, AS)
+                                                    z += 3
+                                                task_sequence.append(AS)
+                                                for i in range(len(task_sequence)):
+
+                                                    if BEAST[1] > 52.5:
+                                                        graph = dict(graph_right)
+                                                    else:
+                                                        graph = dict(graph_left)
+
+
+                                                    c = dijkstra(graph,BEAST[0],task_sequence[i][0])
+
+
+                                                    for j in range(1,len(c)):
+                                                        b.append(c[j])
+                                                    BEAST[1] = task_sequence[i][1] 
+                                                    BEAST[2] = task_sequence[i][2]
+                                            # if more than one components are missing
+                                            else:
+                                                # add 2 of them in the beginning of the list and recalculate the waypoint list
+                                                Quality_List[0].insert(0, Quality_List[0].pop(Quality_List[0].index(components_not_stored[0])))
+                                                Quality_List[0].insert(0, Quality_List[0].pop(Quality_List[0].index(components_not_stored[1])))
+                                                QualityList[0].insert(0, QualityList[0].pop(QualityList[0].index(find_component(components_not_stored[0]))))
+                                                QualityList[0].insert(0, QualityList[0].pop(QualityList[0].index(find_component(components_not_stored[1]))))
+                                                
+                                                ProductList.insert(0,QualityList[0])
+                                                Product_List.insert(0,Quality_List[0])
+                                                task_sequence = [(QualityList[0])[i] for i in range(len(QualityList[0]))] + task_sequence
+                                                task_sequence = list(filter(lambda a: a[0] != 'AS', task_sequence))
+                                                
+                                                z=2
+                                                while z < len(task_sequence):
+                                                    task_sequence.insert(z, AS)
+                                                    z += 3
+                                                task_sequence.append(AS)
+                                                for i in range(len(task_sequence)):
+
+                                                    if BEAST[1] > 52.5:
+                                                        graph = dict(graph_right)
+                                                    else:
+                                                        graph = dict(graph_left)
+
+
+                                                    c = dijkstra(graph,BEAST[0],task_sequence[i][0])
+
+
+                                                    for j in range(1,len(c)):
+                                                        b.append(c[j])
+                                                    BEAST[1] = task_sequence[i][1] 
+                                                    BEAST[2] = task_sequence[i][2]
+                                            
+                                        # if the component is needed for the assembly of the faulty component
+                                        elif robot_items[0] in Quality_List[0]:
+                                            # check how many of the components needed for the faulty product are not in the assembly storage
+                                            components_not_stored = []
+                                            components_stored = []
+                                            AS_storage_check = list(AS_storage)
+                                            for component in Quality_List[0]:
+                                                if component in AS_storage:
+                                                    components_stored.append(component)
+                                                    AS_storage_check.remove(component)
+                                                else:
+                                                    components_not_stored.append(component)
+                                            # if only one component is missing
+                                            if len(components_not_stored) == 1:
+                                                Quality_List[0].insert(0, Quality_List[0].pop(Quality_List[0].index(components_not_stored[0])))
+                                                QualityList[0].insert(0, QualityList[0].pop(QualityList[0].index(find_component(components_not_stored[0]))))
+                                                b=[]
+                                                ProductList.insert(0,QualityList[0])
+                                                Product_List.insert(0,Quality_List[0])
+                                                # insert the components of the faulty product in the beginning of the task sequence
+                                                task_sequence = [(QualityList[0])[i] for i in range(len(QualityList[0]))] + task_sequence
+                                                task_sequence = list(filter(lambda a: a[0] != 'AS', task_sequence))
+                                                
+                                                z=1
+                                                while z < len(task_sequence):
+                                                    task_sequence.insert(z, AS)
+                                                    z += 3
+                                                task_sequence.append(AS)
+
+                                                # Apply dijkstras for the new task sequence and create a new waypoint list
+                                                for i in range(len(task_sequence)):
+
+                                                    if BEAST[1] > 52.5:
+                                                        graph = dict(graph_right)
+                                                    else:
+                                                        graph = dict(graph_left)
+
+
+                                                    c = dijkstra(graph,BEAST[0],task_sequence[i][0])
+
+
+                                                    for j in range(1,len(c)):
+                                                        b.append(c[j])
+                                                    BEAST[1] = task_sequence[i][1] 
+                                                    BEAST[2] = task_sequence[i][2]
+                                            # if we are missing more than one components
+                                            else:
+                                                # create a temporary task sequence and find the fastest path to carry the component back to the storage station
+                                                temp_task_sequence = [find_component(robot_items[0])]
+                                                graph = dict(graph_right)
+
+                                                c = dijkstra(graph,BEAST[0],temp_task_sequence[0][0])
+
+                                                for j in range(1,len(c)):
+                                                    b.append(c[j])
+
+                                                for k in range(len(b)):
+                                                    print("BEAST is moving towards: {}".format(b[k]))
+                                                    time.sleep(1)
+                                                    if b[k] == 'C1' or b[k] == 'C2' or b[k] == 'C3' or b[k] == 'C4' or b[k] == 'C5' or b[k] == 'C6' :
+                                                        print("BEAST has arrived in station: {}".format(b[k]))
+                                                        print("BEAST is unloading")
+
+                                                        task_sequence.insert(0,find_component(robot_items[0]))
+                                                        BEAST[1] = find_component(robot_items[0])[1]
+                                                        BEAST[2] = find_component(robot_items[0])[2]
+                                                
+                                                        robot_items=[]
+                                                        time.sleep(1)
+                                                b=[]
+                                                # add 2 of them in the beginning of the list and recalculate the waypoint list
+                                                Quality_List[0].insert(0, Quality_List[0].pop(Quality_List[0].index(components_not_stored[0])))
+                                                Quality_List[0].insert(0, Quality_List[0].pop(Quality_List[0].index(components_not_stored[1])))
+                                                QualityList[0].insert(0, QualityList[0].pop(QualityList[0].index(find_component(components_not_stored[0]))))
+                                                QualityList[0].insert(0, QualityList[0].pop(QualityList[0].index(find_component(components_not_stored[1]))))
+                                                
+                                                ProductList.insert(0,QualityList[0])
+                                                Product_List.insert(0,Quality_List[0])
+                                                task_sequence = [(QualityList[0])[i] for i in range(len(QualityList[0]))] + task_sequence
+                                                task_sequence = list(filter(lambda a: a[0] != 'AS', task_sequence))
+                                                
+                                                z=2
+                                                while z < len(task_sequence):
+                                                    task_sequence.insert(z, AS)
+                                                    z += 3
+                                                task_sequence.append(AS)
+                                                for i in range(len(task_sequence)):
+
+                                                    if BEAST[1] > 52.5:
+                                                        graph = dict(graph_right)
+                                                    else:
+                                                        graph = dict(graph_left)
+
+
+                                                    c = dijkstra(graph,BEAST[0],task_sequence[i][0])
+
+
+                                                    for j in range(1,len(c)):
+                                                        b.append(c[j])
+                                                    BEAST[1] = task_sequence[i][1] 
+                                                    BEAST[2] = task_sequence[i][2]
+                                    break            
+                                
+                                # If the robot is on the right side and it carries exactly 2 items
+                                elif (BEAST[1] > 52.5) and (len(robot_items) == 2):
+                                    # If there is space in the buffers for the first component
+                                    if C_storage[components.index(robot_items[0])]<3:
+                                        C_storage_check = list(C_storage)
+                                        C_storage_check[components.index(robot_items[0])]+=1
+                                        # and if there is space for the second component too
+                                        if C_storage_check[components.index(robot_items[1])]<3:
+                                            print("BEAST has arrived in the Assembly station")
+                                            print("BEAST is unloading")
+                                            del task_sequence[0]
+                                            AS_storage = AS_storage + robot_items
+                                            BEAST[1] = AS[1]
+                                            BEAST[2] = AS[2]
+
+
                                             # find which components are needed
                                             components_not_stored = []
                                             components_stored = []
@@ -731,226 +1341,163 @@ while restart:
                                                     components_stored.append(component)
                                                 else:
                                                     components_not_stored.append(component)
-                                            # if only one is needed
+                                            
                                             if len(components_not_stored) == 1:
-                                                
-                                                Quality_List[0] = Quality_List[0].insert(0, Quality_List[0].pop(Quality_List[0].index(components_not_stored[0])))
-                                                QualityList[0] = QualityList[0].insert(0, QualityList[0].pop(Quality_List[0].index(find_component(components_not_stored[0]))))
-                                                
-                                                
-                                                ProductList.insert(0,QualityList[0])
-                                                Product_List.insert(0,Quality_List[0])
-                                                task_sequence = [(QualityList[0])[i] for i in range(len(QualityList[0]))] + task_sequence
-                                                task_sequence = list(filter(lambda a: a[0] != 'AS', task_sequence))
-                                                
-                                                z=2
-                                                while z < len(task_sequence):
-                                                    task_sequence.insert(z, AS)
-                                                    z += 3
-                                                task_sequence.append(AS)
-                                                for i in range(len(task_sequence)):
-
-                                                    if BEAST[1] > 52.5:
-                                                        graph = dict(graph_right)
-                                                    else:
-                                                        graph = dict(graph_left)
-
-
-                                                    c = dijkstra(graph,BEAST[0],task_sequence[i][0])
-
-
-                                                    for j in range(1,len(c)):
-                                                        b.append(c[j])
-                                                    BEAST[1] = task_sequence[i][1] 
-                                                    BEAST[2] = task_sequence[i][2]
-                                            # if more than one components are needed
+                                                # put in the beginning of the list and recalculate the waypoint list
+                                                Quality_List[0].insert(0, Quality_List[0].pop(Quality_List[0].index(components_not_stored[0])))
+                                                QualityList[0].insert(0, QualityList[0].pop(QualityList[0].index(find_component(components_not_stored[0]))))
                                             else:
-                                                Quality_List[0] = Quality_List[0].insert(0, Quality_List[0].pop(Quality_List[0].index(components_not_stored[0])))
-                                                Quality_List[0] = Quality_List[0].insert(0, Quality_List[0].pop(Quality_List[0].index(components_not_stored[1])))
-                                                QualityList[0] = QualityList[0].insert(0, QualityList[0].pop(Quality_List[0].index(find_component(components_not_stored[0]))))
-                                                QualityList[0] = QualityList[0].insert(0, QualityList[0].pop(Quality_List[0].index(find_component(components_not_stored[1]))))
-                                                
-                                                ProductList.insert(0,QualityList[0])
-                                                Product_List.insert(0,Quality_List[0])
-                                                task_sequence = [(QualityList[0])[i] for i in range(len(QualityList[0]))] + task_sequence
-                                                task_sequence = list(filter(lambda a: a[0] != 'AS', task_sequence))
-                                                
-                                                z=2
-                                                while z < len(task_sequence):
-                                                    task_sequence.insert(z, AS)
-                                                    z += 3
-                                                task_sequence.append(AS)
-                                                for i in range(len(task_sequence)):
+                                                Quality_List[0].insert(0, Quality_List[0].pop(Quality_List[0].index(components_not_stored[0])))
+                                                Quality_List[0].insert(0, Quality_List[0].pop(Quality_List[0].index(components_not_stored[1])))
+                                                QualityList[0].insert(0, QualityList[0].pop(QualityList[0].index(find_component(components_not_stored[0]))))
+                                                QualityList[0].insert(0, QualityList[0].pop(QualityList[0].index(find_component(components_not_stored[1]))))
 
-                                                    if BEAST[1] > 52.5:
-                                                        graph = dict(graph_right)
+                                            ProductList.insert(0,QualityList[0])
+                                            Product_List.insert(0,Quality_List[0])
+                                            # insert the components of the faulty product in the beginning of the task sequence
+                                            task_sequence = [(QualityList[0])[i] for i in range(len(QualityList[0]))] + task_sequence
+                                            task_sequence = list(filter(lambda a: a[0] != 'AS', task_sequence))
+                                            z=2
+                                            while z < len(task_sequence):
+                                                task_sequence.insert(z, AS)
+                                                z += 3
+                                            task_sequence.append(AS)
+
+                                            # Apply dijkstras for the new task sequence and create a new waypoint list
+                                            for i in range(len(task_sequence)):
+
+                                                if BEAST[1] > 52.5:
+                                                    graph = dict(graph_right)
+                                                else:
+                                                    graph = dict(graph_left)
+
+
+                                                c = dijkstra(graph,BEAST[0],task_sequence[i][0])
+
+
+                                                for j in range(1,len(c)):
+                                                    b.append(c[j])
+                                                BEAST[1] = task_sequence[i][1] 
+                                                BEAST[2] = task_sequence[i][2]
+                                        # if there is no space for the second component
+                                        else:
+                                            print("BEAST has arrived in the Assembly station")
+                                            print("BEAST is unloading")
+                                            del task_sequence[0]
+                                            AS_storage = AS_storage + robot_items[0]
+                                            del robot_items[0]
+                                            BEAST[1] = AS[1]
+                                            BEAST[2] = AS[2]
+                                            if robot_items[0] not in Quality_List[0]:
+                                                # create a temporary task sequence and find the fastest path to carry the component back to the storage station
+                                                temp_task_sequence = [find_component(robot_items[0])]
+                                                graph = dict(graph_right)
+
+                                                c = dijkstra(graph,BEAST[0],temp_task_sequence[0][0])
+
+                                                for j in range(1,len(c)):
+                                                    b.append(c[j])
+
+                                                for k in range(len(b)):
+                                                    print("BEAST is moving towards: {}".format(b[k]))
+                                                    time.sleep(1)
+                                                    if b[k] == 'C1' or b[k] == 'C2' or b[k] == 'C3' or b[k] == 'C4' or b[k] == 'C5' or b[k] == 'C6' :
+                                                        print("BEAST has arrived in station: {}".format(b[k]))
+                                                        print("BEAST is unloading")
+
+                                                        task_sequence.insert(0,find_component(robot_items[0]))
+                                                        BEAST[1] = find_component(robot_items[0])[1]
+                                                        BEAST[2] = find_component(robot_items[0])[2]
+                                                
+                                                        robot_items=[]
+                                                        time.sleep(1)
+                                                # find which components are needed
+                                                components_not_stored = []
+                                                components_stored = []
+                                                for component in Quality_List[0]:
+                                                    if component in AS_storage:
+                                                        components_stored.append(component)
                                                     else:
-                                                        graph = dict(graph_left)
-
-
-                                                    c = dijkstra(graph,BEAST[0],task_sequence[i][0])
-
-
-                                                    for j in range(1,len(c)):
-                                                        b.append(c[j])
-                                                    BEAST[1] = task_sequence[i][1] 
-                                                    BEAST[2] = task_sequence[i][2]
+                                                        components_not_stored.append(component)
+                                                # if only one is needed
+                                                if len(components_not_stored) == 1:
+                                                    b=[]
+                                                    Quality_List[0].insert(0, Quality_List[0].pop(Quality_List[0].index(components_not_stored[0])))
+                                                    QualityList[0].insert(0, QualityList[0].pop(QualityList[0].index(find_component(components_not_stored[0]))))
                                                     
-                                # if there is no space for the first component and there is space for the second one
-                                elif C_storage[components.index(robot_items[0])]>=3 and C_storage[components.index(robot_items[1])]<3:
-                                    # leave the second one in the buffer
-                                    print("BEAST has arrived in the Assembly station")
-                                    print("BEAST is unloading")
-                                    del task_sequence[0]
-                                    AS_storage = AS_storage + robot_items[1]
-                                    del robot_items[1]
-                                    BEAST[1] = AS[1]
-                                    BEAST[2] = AS[2]
-                                    
-                                    # if the component for which there is no space is not needed for the faulty product
-                                    if robot_items[0] not in Quality_List[0]:
-                                        # create a temporary task sequence and find the fastest path to carry the component back to its storage station
-                                        temp_task_sequence = [find_component(robot_items[0])]
-                                        graph = dict(graph_right)
+                                                    
+                                                    ProductList.insert(0,QualityList[0])
+                                                    Product_List.insert(0,Quality_List[0])
+                                                    task_sequence = [(QualityList[0])[i] for i in range(len(QualityList[0]))] + task_sequence
+                                                    task_sequence = list(filter(lambda a: a[0] != 'AS', task_sequence))
+                                                    
+                                                    z=2
+                                                    while z < len(task_sequence):
+                                                        task_sequence.insert(z, AS)
+                                                        z += 3
+                                                    task_sequence.append(AS)
+                                                    for i in range(len(task_sequence)):
 
-                                        c = dijkstra(graph,BEAST[0],temp_task_sequence[0][0])
+                                                        if BEAST[1] > 52.5:
+                                                            graph = dict(graph_right)
+                                                        else:
+                                                            graph = dict(graph_left)
 
-                                        for j in range(1,len(c)):
-                                            b.append(c[j])
 
-                                        for k in range(len(b)):
-                                            print("BEAST is moving towards: {}".format(b[k]))
-                                            time.sleep(1)
-                                            if b[k] == 'C1' or b[k] == 'C2' or b[k] == 'C3' or b[k] == 'C4' or b[k] == 'C5' or b[k] == 'C6' :
-                                                print("BEAST has arrived in station: {}".format(b[k]))
-                                                print("BEAST is unloading")
+                                                        c = dijkstra(graph,BEAST[0],task_sequence[i][0])
 
-                                                task_sequence.insert(0,find_component(robot_items[0]))
-                                                BEAST[1] = find_component(robot_items[0])[1]
-                                                BEAST[2] = find_component(robot_items[0])[2]
+
+                                                        for j in range(1,len(c)):
+                                                            b.append(c[j])
+                                                        BEAST[1] = task_sequence[i][1] 
+                                                        BEAST[2] = task_sequence[i][2]
+                                                # if more than one components are needed
+                                                else:
+                                                    b=[]
+                                                    Quality_List[0].insert(0, Quality_List[0].pop(Quality_List[0].index(components_not_stored[0])))
+                                                    Quality_List[0].insert(0, Quality_List[0].pop(Quality_List[0].index(components_not_stored[1])))
+                                                    QualityList[0].insert(0, QualityList[0].pop(QualityList[0].index(find_component(components_not_stored[0]))))
+                                                    QualityList[0].insert(0, QualityList[0].pop(QualityList[0].index(find_component(components_not_stored[1]))))
+                                                    
+                                                    ProductList.insert(0,QualityList[0])
+                                                    Product_List.insert(0,Quality_List[0])
+                                                    task_sequence = [(QualityList[0])[i] for i in range(len(QualityList[0]))] + task_sequence
+                                                    task_sequence = list(filter(lambda a: a[0] != 'AS', task_sequence))
+                                                    
+                                                    z=2
+                                                    while z < len(task_sequence):
+                                                        task_sequence.insert(z, AS)
+                                                        z += 3
+                                                    task_sequence.append(AS)
+                                                    for i in range(len(task_sequence)):
+
+                                                        if BEAST[1] > 52.5:
+                                                            graph = dict(graph_right)
+                                                        else:
+                                                            graph = dict(graph_left)
+
+
+                                                        c = dijkstra(graph,BEAST[0],task_sequence[i][0])
+
+
+                                                        for j in range(1,len(c)):
+                                                            b.append(c[j])
+                                                        BEAST[1] = task_sequence[i][1] 
+                                                        BEAST[2] = task_sequence[i][2]
+                                                        
+                                    # if there is no space for the first component and there is space for the second one
+                                    elif C_storage[components.index(robot_items[0])]>=3 and C_storage[components.index(robot_items[1])]<3:
+                                        # leave the second one in the buffer
+                                        print("BEAST has arrived in the Assembly station")
+                                        print("BEAST is unloading")
+                                        del task_sequence[0]
+                                        AS_storage = AS_storage + robot_items[1]
+                                        del robot_items[1]
+                                        BEAST[1] = AS[1]
+                                        BEAST[2] = AS[2]
                                         
-                                                robot_items=[]
-                                                time.sleep(1)
-                                        b=[]
-                                        # check which components are needed
-                                        components_not_stored = []
-                                        components_stored = []
-                                        for component in Quality_List[0]:
-                                            if component in AS_storage:
-                                                components_stored.append(component)
-                                            else:
-                                                components_not_stored.append(component)
-
-                                        # if only one component is needed
-                                        if len(components_not_stored) == 1:
-                                            
-                                            Quality_List[0] = Quality_List[0].insert(0, Quality_List[0].pop(Quality_List[0].index(components_not_stored[0])))
-                                            QualityList[0] = QualityList[0].insert(0, QualityList[0].pop(Quality_List[0].index(find_component(components_not_stored[0]))))
-                                            
-                                            
-                                            ProductList.insert(0,QualityList[0])
-                                            Product_List.insert(0,Quality_List[0])
-                                            task_sequence = [(QualityList[0])[i] for i in range(len(QualityList[0]))] + task_sequence
-                                            task_sequence = list(filter(lambda a: a[0] != 'AS', task_sequence))
-                                            
-                                            z=2
-                                            while z < len(task_sequence):
-                                                task_sequence.insert(z, AS)
-                                                z += 3
-                                            task_sequence.append(AS)
-                                            for i in range(len(task_sequence)):
-
-                                                if BEAST[1] > 52.5:
-                                                    graph = dict(graph_right)
-                                                else:
-                                                    graph = dict(graph_left)
-
-
-                                                c = dijkstra(graph,BEAST[0],task_sequence[i][0])
-
-
-                                                for j in range(1,len(c)):
-                                                    b.append(c[j])
-                                                BEAST[1] = task_sequence[i][1] 
-                                                BEAST[2] = task_sequence[i][2]
-
-                                        # if 2 or more components are needed
-                                        else:
-                                            Quality_List[0] = Quality_List[0].insert(0, Quality_List[0].pop(Quality_List[0].index(components_not_stored[0])))
-                                            Quality_List[0] = Quality_List[0].insert(0, Quality_List[0].pop(Quality_List[0].index(components_not_stored[1])))
-                                            QualityList[0] = QualityList[0].insert(0, QualityList[0].pop(Quality_List[0].index(find_component(components_not_stored[0]))))
-                                            QualityList[0] = QualityList[0].insert(0, QualityList[0].pop(Quality_List[0].index(find_component(components_not_stored[1]))))
-                                            
-                                            ProductList.insert(0,QualityList[0])
-                                            Product_List.insert(0,Quality_List[0])
-                                            task_sequence = [(QualityList[0])[i] for i in range(len(QualityList[0]))] + task_sequence
-                                            task_sequence = list(filter(lambda a: a[0] != 'AS', task_sequence))
-                                            
-                                            z=2
-                                            while z < len(task_sequence):
-                                                task_sequence.insert(z, AS)
-                                                z += 3
-                                            task_sequence.append(AS)
-                                            for i in range(len(task_sequence)):
-
-                                                if BEAST[1] > 52.5:
-                                                    graph = dict(graph_right)
-                                                else:
-                                                    graph = dict(graph_left)
-
-
-                                                c = dijkstra(graph,BEAST[0],task_sequence[i][0])
-
-
-                                                for j in range(1,len(c)):
-                                                    b.append(c[j])
-                                                BEAST[1] = task_sequence[i][1] 
-                                                BEAST[2] = task_sequence[i][2]
-                                        
-                                    # if the component is needed for the assembly of the faulty component
-                                    elif robot_items[0] in Quality_List[0]:
-
-                                        components_not_stored = []
-                                        components_stored = []
-                                        for component in Quality_List[0]:
-                                            if component in AS_storage:
-                                                components_stored.append(component)
-                                            else:
-                                                components_not_stored.append(component)
-
-                                        if len(components_not_stored) == 1:
-                                            
-                                            Quality_List[0] = Quality_List[0].insert(0, Quality_List[0].pop(Quality_List[0].index(components_not_stored[0])))
-                                            QualityList[0] = QualityList[0].insert(0, QualityList[0].pop(Quality_List[0].index(find_component(components_not_stored[0]))))
-                                            
-                                            
-                                            ProductList.insert(0,QualityList[0])
-                                            Product_List.insert(0,Quality_List[0])
-                                            task_sequence = [(QualityList[0])[i] for i in range(len(QualityList[0]))] + task_sequence
-                                            task_sequence = list(filter(lambda a: a[0] != 'AS', task_sequence))
-                                            
-                                            z=1
-                                            while z < len(task_sequence):
-                                                task_sequence.insert(z, AS)
-                                                z += 3
-                                            task_sequence.append(AS)
-                                            for i in range(len(task_sequence)):
-
-                                                if BEAST[1] > 52.5:
-                                                    graph = dict(graph_right)
-                                                else:
-                                                    graph = dict(graph_left)
-
-
-                                                c = dijkstra(graph,BEAST[0],task_sequence[i][0])
-
-
-                                                for j in range(1,len(c)):
-                                                    b.append(c[j])
-                                                BEAST[1] = task_sequence[i][1] 
-                                                BEAST[2] = task_sequence[i][2]
-
-                                        else:
+                                        # if the component for which there is no space is not needed for the faulty product
+                                        if robot_items[0] not in Quality_List[0]:
                                             # create a temporary task sequence and find the fastest path to carry the component back to its storage station
                                             temp_task_sequence = [find_component(robot_items[0])]
                                             graph = dict(graph_right)
@@ -973,433 +1520,183 @@ while restart:
                                             
                                                     robot_items=[]
                                                     time.sleep(1)
-
                                             b=[]
-                                            Quality_List[0] = Quality_List[0].insert(0, Quality_List[0].pop(Quality_List[0].index(components_not_stored[0])))
-                                            Quality_List[0] = Quality_List[0].insert(0, Quality_List[0].pop(Quality_List[0].index(components_not_stored[1])))
-                                            QualityList[0] = QualityList[0].insert(0, QualityList[0].pop(Quality_List[0].index(find_component(components_not_stored[0]))))
-                                            QualityList[0] = QualityList[0].insert(0, QualityList[0].pop(Quality_List[0].index(find_component(components_not_stored[1]))))
-                                            
-                                            ProductList.insert(0,QualityList[0])
-                                            Product_List.insert(0,Quality_List[0])
-                                            task_sequence = [(QualityList[0])[i] for i in range(len(QualityList[0]))] + task_sequence
-                                            task_sequence = list(filter(lambda a: a[0] != 'AS', task_sequence))
-                                            
-                                            z=2
-                                            while z < len(task_sequence):
-                                                task_sequence.insert(z, AS)
-                                                z += 3
-                                            task_sequence.append(AS)
-                                            for i in range(len(task_sequence)):
-
-                                                if BEAST[1] > 52.5:
-                                                    graph = dict(graph_right)
+                                            # check which components are needed
+                                            components_not_stored = []
+                                            components_stored = []
+                                            for component in Quality_List[0]:
+                                                if component in AS_storage:
+                                                    components_stored.append(component)
                                                 else:
-                                                    graph = dict(graph_left)
+                                                    components_not_stored.append(component)
+
+                                            # if only one component is needed
+                                            if len(components_not_stored) == 1:
+                                                
+                                                Quality_List[0].insert(0, Quality_List[0].pop(Quality_List[0].index(components_not_stored[0])))
+                                                QualityList[0].insert(0, QualityList[0].pop(QualityList[0].index(find_component(components_not_stored[0]))))
+                                                
+                                                
+                                                ProductList.insert(0,QualityList[0])
+                                                Product_List.insert(0,Quality_List[0])
+                                                task_sequence = [(QualityList[0])[i] for i in range(len(QualityList[0]))] + task_sequence
+                                                task_sequence = list(filter(lambda a: a[0] != 'AS', task_sequence))
+                                                
+                                                z=2
+                                                while z < len(task_sequence):
+                                                    task_sequence.insert(z, AS)
+                                                    z += 3
+                                                task_sequence.append(AS)
+                                                for i in range(len(task_sequence)):
+
+                                                    if BEAST[1] > 52.5:
+                                                        graph = dict(graph_right)
+                                                    else:
+                                                        graph = dict(graph_left)
 
 
-                                                c = dijkstra(graph,BEAST[0],task_sequence[i][0])
+                                                    c = dijkstra(graph,BEAST[0],task_sequence[i][0])
 
 
-                                                for j in range(1,len(c)):
-                                                    b.append(c[j])
-                                                BEAST[1] = task_sequence[i][1] 
-                                                BEAST[2] = task_sequence[i][2]
+                                                    for j in range(1,len(c)):
+                                                        b.append(c[j])
+                                                    BEAST[1] = task_sequence[i][1] 
+                                                    BEAST[2] = task_sequence[i][2]
 
-                                elif C_storage[components.index(robot_items[0])]>=3 and C_storage[components.index(robot_items[1])]>=3:
-                                    if robot_items[0] not in Quality_List[0] and robot_items[1] not in Quality_List[0]:
-                                        temp_task_sequence = [find_component(robot_items[0]),find_component(robot_items[1])]
-                                        for i in range(len(temp_task_sequence)):
-                                            if BEAST[1] > 52.5:
+                                            # if 2 or more components are needed
+                                            else:
+                                                Quality_List[0].insert(0, Quality_List[0].pop(Quality_List[0].index(components_not_stored[0])))
+                                                Quality_List[0].insert(0, Quality_List[0].pop(Quality_List[0].index(components_not_stored[1])))
+                                                QualityList[0].insert(0, QualityList[0].pop(QualityList[0].index(find_component(components_not_stored[0]))))
+                                                QualityList[0].insert(0, QualityList[0].pop(QualityList[0].index(find_component(components_not_stored[1]))))
+                                                
+                                                ProductList.insert(0,QualityList[0])
+                                                Product_List.insert(0,Quality_List[0])
+                                                task_sequence = [(QualityList[0])[i] for i in range(len(QualityList[0]))] + task_sequence
+                                                task_sequence = list(filter(lambda a: a[0] != 'AS', task_sequence))
+                                                
+                                                z=2
+                                                while z < len(task_sequence):
+                                                    task_sequence.insert(z, AS)
+                                                    z += 3
+                                                task_sequence.append(AS)
+                                                for i in range(len(task_sequence)):
+
+                                                    if BEAST[1] > 52.5:
+                                                        graph = dict(graph_right)
+                                                    else:
+                                                        graph = dict(graph_left)
+
+
+                                                    c = dijkstra(graph,BEAST[0],task_sequence[i][0])
+
+
+                                                    for j in range(1,len(c)):
+                                                        b.append(c[j])
+                                                    BEAST[1] = task_sequence[i][1] 
+                                                    BEAST[2] = task_sequence[i][2]
+                                            
+                                        # if the component is needed for the assembly of the faulty component
+                                        elif robot_items[0] in Quality_List[0]:
+
+                                            components_not_stored = []
+                                            components_stored = []
+                                            for component in Quality_List[0]:
+                                                if component in AS_storage:
+                                                    components_stored.append(component)
+                                                else:
+                                                    components_not_stored.append(component)
+
+                                            if len(components_not_stored) == 1:
+                                                
+                                                Quality_List[0].insert(0, Quality_List[0].pop(Quality_List[0].index(components_not_stored[0])))
+                                                QualityList[0].insert(0, QualityList[0].pop(QualityList[0].index(find_component(components_not_stored[0]))))
+                                                
+                                                
+                                                ProductList.insert(0,QualityList[0])
+                                                Product_List.insert(0,Quality_List[0])
+                                                task_sequence = [(QualityList[0])[i] for i in range(len(QualityList[0]))] + task_sequence
+                                                task_sequence = list(filter(lambda a: a[0] != 'AS', task_sequence))
+                                                
+                                                z=1
+                                                while z < len(task_sequence):
+                                                    task_sequence.insert(z, AS)
+                                                    z += 3
+                                                task_sequence.append(AS)
+                                                for i in range(len(task_sequence)):
+
+                                                    if BEAST[1] > 52.5:
+                                                        graph = dict(graph_right)
+                                                    else:
+                                                        graph = dict(graph_left)
+
+
+                                                    c = dijkstra(graph,BEAST[0],task_sequence[i][0])
+
+
+                                                    for j in range(1,len(c)):
+                                                        b.append(c[j])
+                                                    BEAST[1] = task_sequence[i][1] 
+                                                    BEAST[2] = task_sequence[i][2]
+
+                                            else:
+                                                # create a temporary task sequence and find the fastest path to carry the component back to its storage station
+                                                temp_task_sequence = [find_component(robot_items[0])]
                                                 graph = dict(graph_right)
-                                            else:
-                                                graph = dict(graph_left)
-                                            for j in range(1,len(c)):
-                                                b.append(c[j])
-                                            for k in range(len(b)):
-                                                print("BEAST is moving towards: {}".format(b[k]))
-                                                time.sleep(1)
-                                                if b[k] == 'C1' or b[k] == 'C2' or b[k] == 'C3' or b[k] == 'C4' or b[k] == 'C5' or b[k] == 'C6' :
-                                                    print("BEAST has arrived in station: {}".format(b[k]))
-                                                    print("BEAST is unloading")
 
-                                                    
-                                                    BEAST[1] = find_component(robot_items[0])[1]
-                                                    BEAST[2] = find_component(robot_items[0])[2]
+                                                c = dijkstra(graph,BEAST[0],temp_task_sequence[0][0])
+
+                                                for j in range(1,len(c)):
+                                                    b.append(c[j])
+
+                                                for k in range(len(b)):
+                                                    print("BEAST is moving towards: {}".format(b[k]))
                                                     time.sleep(1)
-                                        task_sequence.insert(0,find_component(robot_items[0]))
-                                        task_sequence.insert(0,find_component(robot_items[1]))
-                                        robot_items=[]
-                                        b=[]
+                                                    if b[k] == 'C1' or b[k] == 'C2' or b[k] == 'C3' or b[k] == 'C4' or b[k] == 'C5' or b[k] == 'C6' :
+                                                        print("BEAST has arrived in station: {}".format(b[k]))
+                                                        print("BEAST is unloading")
 
-                                        
-                                        components_not_stored = []
-                                        components_stored = []
-                                        for component in Quality_List[0]:
-                                            if component in AS_storage:
-                                                components_stored.append(component)
-                                            else:
-                                                components_not_stored.append(component)
-                                        
-                                        if len(components_not_stored) == 1:
-                                            Quality_List[0] = Quality_List[0].insert(0, Quality_List[0].pop(Quality_List[0].index(components_not_stored[0])))
-                                            QualityList[0] = QualityList[0].insert(0, QualityList[0].pop(Quality_List[0].index(find_component(components_not_stored[0]))))
-                                            
-                                            
-                                            ProductList.insert(0,QualityList[0])
-                                            Product_List.insert(0,Quality_List[0])
-                                            task_sequence = [(QualityList[0])[i] for i in range(len(QualityList[0]))] + task_sequence
-                                            task_sequence = list(filter(lambda a: a[0] != 'AS', task_sequence))
-                                            
-                                            z=2
-                                            while z < len(task_sequence):
-                                                task_sequence.insert(z, AS)
-                                                z += 3
-                                            task_sequence.append(AS)
-                                            for i in range(len(task_sequence)):
+                                                        task_sequence.insert(0,find_component(robot_items[0]))
+                                                        BEAST[1] = find_component(robot_items[0])[1]
+                                                        BEAST[2] = find_component(robot_items[0])[2]
+                                                
+                                                        robot_items=[]
+                                                        time.sleep(1)
 
-                                                if BEAST[1] > 52.5:
-                                                    graph = dict(graph_right)
-                                                else:
-                                                    graph = dict(graph_left)
+                                                b=[]
+                                                Quality_List[0].insert(0, Quality_List[0].pop(Quality_List[0].index(components_not_stored[0])))
+                                                Quality_List[0].insert(0, Quality_List[0].pop(Quality_List[0].index(components_not_stored[1])))
+                                                QualityList[0].insert(0, QualityList[0].pop(QualityList[0].index(find_component(components_not_stored[0]))))
+                                                QualityList[0].insert(0, QualityList[0].pop(QualityList[0].index(find_component(components_not_stored[1]))))
+                                                
+                                                ProductList.insert(0,QualityList[0])
+                                                Product_List.insert(0,Quality_List[0])
+                                                task_sequence = [(QualityList[0])[i] for i in range(len(QualityList[0]))] + task_sequence
+                                                task_sequence = list(filter(lambda a: a[0] != 'AS', task_sequence))
+                                                
+                                                z=2
+                                                while z < len(task_sequence):
+                                                    task_sequence.insert(z, AS)
+                                                    z += 3
+                                                task_sequence.append(AS)
+                                                for i in range(len(task_sequence)):
+
+                                                    if BEAST[1] > 52.5:
+                                                        graph = dict(graph_right)
+                                                    else:
+                                                        graph = dict(graph_left)
 
 
-                                                c = dijkstra(graph,BEAST[0],task_sequence[i][0])
+                                                    c = dijkstra(graph,BEAST[0],task_sequence[i][0])
 
 
-                                                for j in range(1,len(c)):
-                                                    b.append(c[j])
-                                                BEAST[1] = task_sequence[i][1] 
-                                                BEAST[2] = task_sequence[i][2]
+                                                    for j in range(1,len(c)):
+                                                        b.append(c[j])
+                                                    BEAST[1] = task_sequence[i][1] 
+                                                    BEAST[2] = task_sequence[i][2]
 
-                                        elif len(components_not_stored) == 2:
-                                            Quality_List[0] = Quality_List[0].insert(0, Quality_List[0].pop(Quality_List[0].index(components_not_stored[0])))
-                                            Quality_List[0] = Quality_List[0].insert(0, Quality_List[0].pop(Quality_List[0].index(components_not_stored[1])))
-                                            QualityList[0] = QualityList[0].insert(0, QualityList[0].pop(Quality_List[0].index(find_component(components_not_stored[0]))))
-                                            QualityList[0] = QualityList[0].insert(0, QualityList[0].pop(Quality_List[0].index(find_component(components_not_stored[1]))))
-                                            
-                                            ProductList.insert(0,QualityList[0])
-                                            Product_List.insert(0,Quality_List[0])
-                                            task_sequence = [(QualityList[0])[i] for i in range(len(QualityList[0]))] + task_sequence
-                                            task_sequence = list(filter(lambda a: a[0] != 'AS', task_sequence))
-                                            
-                                            z=2
-                                            while z < len(task_sequence):
-                                                task_sequence.insert(z, AS)
-                                                z += 3
-                                            task_sequence.append(AS)
-                                            for i in range(len(task_sequence)):
-
-                                                if BEAST[1] > 52.5:
-                                                    graph = dict(graph_right)
-                                                else:
-                                                    graph = dict(graph_left)
-
-
-                                                c = dijkstra(graph,BEAST[0],task_sequence[i][0])
-
-
-                                                for j in range(1,len(c)):
-                                                    b.append(c[j])
-                                                BEAST[1] = task_sequence[i][1] 
-                                                BEAST[2] = task_sequence[i][2]
-                                        
-
-                                    elif robot_items[0] not in Quality_List[0] and robot_items[1] in Quality_List[0]:
-                                        temp_task_sequence = [find_component(robot_items[0])]
-                                        graph = dict(graph_right)
-
-                                        c = dijkstra(graph,BEAST[0],temp_task_sequence[0][0])
-
-                                        for j in range(1,len(c)):
-                                            b.append(c[j])
-
-                                        for k in range(len(b)):
-                                            print("BEAST is moving towards: {}".format(b[k]))
-                                            time.sleep(1)
-                                            if b[k] == 'C1' or b[k] == 'C2' or b[k] == 'C3' or b[k] == 'C4' or b[k] == 'C5' or b[k] == 'C6' :
-                                                print("BEAST has arrived in station: {}".format(b[k]))
-                                                print("BEAST is unloading")
-
-                                                task_sequence.insert(0,find_component(robot_items[0]))
-                                                BEAST[1] = find_component(robot_items[0])[1]
-                                                BEAST[2] = find_component(robot_items[0])[2]
-                                        
-                                                del robot_items[0]
-                                                time.sleep(1)
-                                        b=[]
-
-                                        components_not_stored = []
-                                        components_stored = []
-                                        for component in Quality_List[0]:
-                                            if component in AS_storage:
-                                                components_stored.append(component)
-                                            else:
-                                                components_not_stored.append(component)
-                                        if  len(components_not_stored) == 1:
-                                            Quality_List[0] = Quality_List[0].insert(0, Quality_List[0].pop(Quality_List[0].index(components_not_stored[0])))
-                                            QualityList[0] = QualityList[0].insert(0, QualityList[0].pop(Quality_List[0].index(find_component(components_not_stored[0]))))
-                                            
-                                            
-                                            ProductList.insert(0,QualityList[0])
-                                            Product_List.insert(0,Quality_List[0])
-                                            task_sequence = [(QualityList[0])[i] for i in range(len(QualityList[0]))] + task_sequence
-                                            task_sequence = list(filter(lambda a: a[0] != 'AS', task_sequence))
-                                            
-                                            z=1
-                                            while z < len(task_sequence):
-                                                task_sequence.insert(z, AS)
-                                                z += 3
-                                            task_sequence.append(AS)
-                                            for i in range(len(task_sequence)):
-
-                                                if BEAST[1] > 52.5:
-                                                    graph = dict(graph_right)
-                                                else:
-                                                    graph = dict(graph_left)
-
-
-                                                c = dijkstra(graph,BEAST[0],task_sequence[i][0])
-
-
-                                                for j in range(1,len(c)):
-                                                    b.append(c[j])
-                                                BEAST[1] = task_sequence[i][1] 
-                                                BEAST[2] = task_sequence[i][2]
-
-                                        else:
-                                            b=[]
-                                            temp_task_sequence = [find_component(robot_items[0])]
-                                            graph = dict(graph_right)
-
-                                            c = dijkstra(graph,BEAST[0],temp_task_sequence[0][0])
-
-                                            for j in range(1,len(c)):
-                                                b.append(c[j])
-
-                                            for k in range(len(b)):
-                                                print("BEAST is moving towards: {}".format(b[k]))
-                                                time.sleep(1)
-                                                if b[k] == 'C1' or b[k] == 'C2' or b[k] == 'C3' or b[k] == 'C4' or b[k] == 'C5' or b[k] == 'C6' :
-                                                    print("BEAST has arrived in station: {}".format(b[k]))
-                                                    print("BEAST is unloading")
-
-                                                    task_sequence.insert(0,find_component(robot_items[0]))
-                                                    BEAST[1] = find_component(robot_items[0])[1]
-                                                    BEAST[2] = find_component(robot_items[0])[2]
-                                            
-                                                    del robot_items[0]
-                                                    time.sleep(1)
-                                            b=[]
-                                            Quality_List[0] = Quality_List[0].insert(0, Quality_List[0].pop(Quality_List[0].index(components_not_stored[0])))
-                                            Quality_List[0] = Quality_List[0].insert(0, Quality_List[0].pop(Quality_List[0].index(components_not_stored[1])))
-                                            QualityList[0] = QualityList[0].insert(0, QualityList[0].pop(Quality_List[0].index(find_component(components_not_stored[0]))))
-                                            QualityList[0] = QualityList[0].insert(0, QualityList[0].pop(Quality_List[0].index(find_component(components_not_stored[1]))))
-                                            
-                                            ProductList.insert(0,QualityList[0])
-                                            Product_List.insert(0,Quality_List[0])
-                                            task_sequence = [(QualityList[0])[i] for i in range(len(QualityList[0]))] + task_sequence
-                                            task_sequence = list(filter(lambda a: a[0] != 'AS', task_sequence))
-                                            
-                                            z=2
-                                            while z < len(task_sequence):
-                                                task_sequence.insert(z, AS)
-                                                z += 3
-                                            task_sequence.append(AS)
-                                            for i in range(len(task_sequence)):
-
-                                                if BEAST[1] > 52.5:
-                                                    graph = dict(graph_right)
-                                                else:
-                                                    graph = dict(graph_left)
-
-
-                                                c = dijkstra(graph,BEAST[0],task_sequence[i][0])
-
-
-                                                for j in range(1,len(c)):
-                                                    b.append(c[j])
-                                                BEAST[1] = task_sequence[i][1] 
-                                                BEAST[2] = task_sequence[i][2]
-                                    
-                                    elif robot_items[0] in Quality_List[0] and robot_items[1] not in Quality_List[0]:
-                                        temp_task_sequence = [find_component(robot_items[1])]
-                                        graph = dict(graph_right)
-
-                                        c = dijkstra(graph,BEAST[0],temp_task_sequence[0][0])
-
-                                        for j in range(1,len(c)):
-                                            b.append(c[j])
-
-                                        for k in range(len(b)):
-                                            print("BEAST is moving towards: {}".format(b[k]))
-                                            time.sleep(1)
-                                            if b[k] == 'C1' or b[k] == 'C2' or b[k] == 'C3' or b[k] == 'C4' or b[k] == 'C5' or b[k] == 'C6' :
-                                                print("BEAST has arrived in station: {}".format(b[k]))
-                                                print("BEAST is unloading")
-
-                                                task_sequence.insert(0,find_component(robot_items[0]))
-                                                BEAST[1] = find_component(robot_items[0])[1]
-                                                BEAST[2] = find_component(robot_items[0])[2]
-                                        
-                                                del robot_items[1]
-                                                time.sleep(1)
-                                        b=[]
-                                        components_not_stored = []
-                                        components_stored = []
-                                        for component in Quality_List[0]:
-                                            if component in AS_storage:
-                                                components_stored.append(component)
-                                            else:
-                                                components_not_stored.append(component)
-
-                                        if  len(components_not_stored) == 1:
-                                            Quality_List[0] = Quality_List[0].insert(0, Quality_List[0].pop(Quality_List[0].index(components_not_stored[0])))
-                                            QualityList[0] = QualityList[0].insert(0, QualityList[0].pop(Quality_List[0].index(find_component(components_not_stored[0]))))
-                                            
-                                            
-                                            ProductList.insert(0,QualityList[0])
-                                            Product_List.insert(0,Quality_List[0])
-                                            task_sequence = [(QualityList[0])[i] for i in range(len(QualityList[0]))] + task_sequence
-                                            task_sequence = list(filter(lambda a: a[0] != 'AS', task_sequence))
-                                            
-                                            z=1
-                                            while z < len(task_sequence):
-                                                task_sequence.insert(z, AS)
-                                                z += 3
-                                            task_sequence.append(AS)
-                                            for i in range(len(task_sequence)):
-
-                                                if BEAST[1] > 52.5:
-                                                    graph = dict(graph_right)
-                                                else:
-                                                    graph = dict(graph_left)
-
-
-                                                c = dijkstra(graph,BEAST[0],task_sequence[i][0])
-
-
-                                                for j in range(1,len(c)):
-                                                    b.append(c[j])
-                                                BEAST[1] = task_sequence[i][1] 
-                                                BEAST[2] = task_sequence[i][2]
-                                        else:
-                                            b=[]
-                                            temp_task_sequence = [find_component(robot_items[0])]
-                                            graph = dict(graph_right)
-
-                                            c = dijkstra(graph,BEAST[0],temp_task_sequence[0][0])
-
-                                            for j in range(1,len(c)):
-                                                b.append(c[j])
-
-                                            for k in range(len(b)):
-                                                print("BEAST is moving towards: {}".format(b[k]))
-                                                time.sleep(1)
-                                                if b[k] == 'C1' or b[k] == 'C2' or b[k] == 'C3' or b[k] == 'C4' or b[k] == 'C5' or b[k] == 'C6' :
-                                                    print("BEAST has arrived in station: {}".format(b[k]))
-                                                    print("BEAST is unloading")
-
-                                                    task_sequence.insert(0,find_component(robot_items[0]))
-                                                    BEAST[1] = find_component(robot_items[0])[1]
-                                                    BEAST[2] = find_component(robot_items[0])[2]
-                                            
-                                                    del robot_items[0]
-                                                    time.sleep(1)
-                                            b=[]
-                                            Quality_List[0] = Quality_List[0].insert(0, Quality_List[0].pop(Quality_List[0].index(components_not_stored[0])))
-                                            Quality_List[0] = Quality_List[0].insert(0, Quality_List[0].pop(Quality_List[0].index(components_not_stored[1])))
-                                            QualityList[0] = QualityList[0].insert(0, QualityList[0].pop(Quality_List[0].index(find_component(components_not_stored[0]))))
-                                            QualityList[0] = QualityList[0].insert(0, QualityList[0].pop(Quality_List[0].index(find_component(components_not_stored[1]))))
-                                            
-                                            ProductList.insert(0,QualityList[0])
-                                            Product_List.insert(0,Quality_List[0])
-                                            task_sequence = [(QualityList[0])[i] for i in range(len(QualityList[0]))] + task_sequence
-                                            task_sequence = list(filter(lambda a: a[0] != 'AS', task_sequence))
-                                            
-                                            z=2
-                                            while z < len(task_sequence):
-                                                task_sequence.insert(z, AS)
-                                                z += 3
-                                            task_sequence.append(AS)
-                                            for i in range(len(task_sequence)):
-
-                                                if BEAST[1] > 52.5:
-                                                    graph = dict(graph_right)
-                                                else:
-                                                    graph = dict(graph_left)
-
-
-                                                c = dijkstra(graph,BEAST[0],task_sequence[i][0])
-
-
-                                                for j in range(1,len(c)):
-                                                    b.append(c[j])
-                                                BEAST[1] = task_sequence[i][1] 
-                                                BEAST[2] = task_sequence[i][2]
-                                    
-                                    elif robot_items[0] in Quality_List[0] and robot_items[1] in Quality_List[0]:
-                                        components_not_stored = []
-                                        components_stored = []
-                                        for component in Quality_List[0]:
-                                            if component in AS_storage:
-                                                components_stored.append(component)
-                                            else:
-                                                components_not_stored.append(component)
-                                        if len(components_not_stored)==1:
-                                            b=[]
-                                            temp_task_sequence = [find_component(robot_items[0])]
-                                            graph = dict(graph_right)
-
-                                            c = dijkstra(graph,BEAST[0],temp_task_sequence[0][0])
-
-                                            for j in range(1,len(c)):
-                                                b.append(c[j])
-
-                                            for k in range(len(b)):
-                                                print("BEAST is moving towards: {}".format(b[k]))
-                                                time.sleep(1)
-                                                if b[k] == 'C1' or b[k] == 'C2' or b[k] == 'C3' or b[k] == 'C4' or b[k] == 'C5' or b[k] == 'C6' :
-                                                    print("BEAST has arrived in station: {}".format(b[k]))
-                                                    print("BEAST is unloading")
-
-                                                    task_sequence.insert(0,find_component(robot_items[0]))
-                                                    BEAST[1] = find_component(robot_items[0])[1]
-                                                    BEAST[2] = find_component(robot_items[0])[2]
-                                            
-                                                    del robot_items[0]
-                                                    time.sleep(1)
-
-                                            Quality_List[0] = Quality_List[0].insert(0, Quality_List[0].pop(Quality_List[0].index(components_not_stored[0])))
-                                            QualityList[0] = QualityList[0].insert(0, QualityList[0].pop(Quality_List[0].index(find_component(components_not_stored[0]))))
-                                            
-                                            
-                                            ProductList.insert(0,QualityList[0])
-                                            Product_List.insert(0,Quality_List[0])
-                                            task_sequence = [(QualityList[0])[i] for i in range(len(QualityList[0]))] + task_sequence
-                                            task_sequence = list(filter(lambda a: a[0] != 'AS', task_sequence))
-                                            
-                                            z=1
-                                            while z < len(task_sequence):
-                                                task_sequence.insert(z, AS)
-                                                z += 3
-                                            task_sequence.append(AS)
-                                            for i in range(len(task_sequence)):
-
-                                                if BEAST[1] > 52.5:
-                                                    graph = dict(graph_right)
-                                                else:
-                                                    graph = dict(graph_left)
-
-
-                                                c = dijkstra(graph,BEAST[0],task_sequence[i][0])
-
-
-                                                for j in range(1,len(c)):
-                                                    b.append(c[j])
-                                                BEAST[1] = task_sequence[i][1] 
-                                                BEAST[2] = task_sequence[i][2]
-                                        else:
+                                    elif C_storage[components.index(robot_items[0])]>=3 and C_storage[components.index(robot_items[1])]>=3:
+                                        if robot_items[0] not in Quality_List[0] and robot_items[1] not in Quality_List[0]:
                                             temp_task_sequence = [find_component(robot_items[0]),find_component(robot_items[1])]
                                             for i in range(len(temp_task_sequence)):
                                                 if BEAST[1] > 52.5:
@@ -1423,107 +1720,431 @@ while restart:
                                             task_sequence.insert(0,find_component(robot_items[1]))
                                             robot_items=[]
                                             b=[]
-                                            Quality_List[0] = Quality_List[0].insert(0, Quality_List[0].pop(Quality_List[0].index(components_not_stored[0])))
-                                            Quality_List[0] = Quality_List[0].insert(0, Quality_List[0].pop(Quality_List[0].index(components_not_stored[1])))
-                                            QualityList[0] = QualityList[0].insert(0, QualityList[0].pop(Quality_List[0].index(find_component(components_not_stored[0]))))
-                                            QualityList[0] = QualityList[0].insert(0, QualityList[0].pop(Quality_List[0].index(find_component(components_not_stored[1]))))
-                                            
-                                            ProductList.insert(0,QualityList[0])
-                                            Product_List.insert(0,Quality_List[0])
-                                            task_sequence = [(QualityList[0])[i] for i in range(len(QualityList[0]))] + task_sequence
-                                            task_sequence = list(filter(lambda a: a[0] != 'AS', task_sequence))
-                                            
-                                            z=2
-                                            while z < len(task_sequence):
-                                                task_sequence.insert(z, AS)
-                                                z += 3
-                                            task_sequence.append(AS)
-                                            for i in range(len(task_sequence)):
 
-                                                if BEAST[1] > 52.5:
-                                                    graph = dict(graph_right)
+                                            
+                                            components_not_stored = []
+                                            components_stored = []
+                                            for component in Quality_List[0]:
+                                                if component in AS_storage:
+                                                    components_stored.append(component)
                                                 else:
-                                                    graph = dict(graph_left)
+                                                    components_not_stored.append(component)
+                                            
+                                            if len(components_not_stored) == 1:
+                                                Quality_List[0].insert(0, Quality_List[0].pop(Quality_List[0].index(components_not_stored[0])))
+                                                QualityList[0].insert(0, QualityList[0].pop(QualityList[0].index(find_component(components_not_stored[0]))))
+                                                
+                                                
+                                                ProductList.insert(0,QualityList[0])
+                                                Product_List.insert(0,Quality_List[0])
+                                                task_sequence = [(QualityList[0])[i] for i in range(len(QualityList[0]))] + task_sequence
+                                                task_sequence = list(filter(lambda a: a[0] != 'AS', task_sequence))
+                                                
+                                                z=2
+                                                while z < len(task_sequence):
+                                                    task_sequence.insert(z, AS)
+                                                    z += 3
+                                                task_sequence.append(AS)
+                                                for i in range(len(task_sequence)):
+
+                                                    if BEAST[1] > 52.5:
+                                                        graph = dict(graph_right)
+                                                    else:
+                                                        graph = dict(graph_left)
 
 
-                                                c = dijkstra(graph,BEAST[0],task_sequence[i][0])
+                                                    c = dijkstra(graph,BEAST[0],task_sequence[i][0])
 
+
+                                                    for j in range(1,len(c)):
+                                                        b.append(c[j])
+                                                    BEAST[1] = task_sequence[i][1] 
+                                                    BEAST[2] = task_sequence[i][2]
+
+                                            elif len(components_not_stored) == 2:
+                                                Quality_List[0].insert(0, Quality_List[0].pop(Quality_List[0].index(components_not_stored[0])))
+                                                Quality_List[0].insert(0, Quality_List[0].pop(Quality_List[0].index(components_not_stored[1])))
+                                                QualityList[0].insert(0, QualityList[0].pop(QualityList[0].index(find_component(components_not_stored[0]))))
+                                                QualityList[0].insert(0, QualityList[0].pop(QualityList[0].index(find_component(components_not_stored[1]))))
+                                                
+                                                ProductList.insert(0,QualityList[0])
+                                                Product_List.insert(0,Quality_List[0])
+                                                task_sequence = [(QualityList[0])[i] for i in range(len(QualityList[0]))] + task_sequence
+                                                task_sequence = list(filter(lambda a: a[0] != 'AS', task_sequence))
+                                                
+                                                z=2
+                                                while z < len(task_sequence):
+                                                    task_sequence.insert(z, AS)
+                                                    z += 3
+                                                task_sequence.append(AS)
+                                                for i in range(len(task_sequence)):
+
+                                                    if BEAST[1] > 52.5:
+                                                        graph = dict(graph_right)
+                                                    else:
+                                                        graph = dict(graph_left)
+
+
+                                                    c = dijkstra(graph,BEAST[0],task_sequence[i][0])
+
+
+                                                    for j in range(1,len(c)):
+                                                        b.append(c[j])
+                                                    BEAST[1] = task_sequence[i][1] 
+                                                    BEAST[2] = task_sequence[i][2]
+                                            
+
+                                        elif robot_items[0] not in Quality_List[0] and robot_items[1] in Quality_List[0]:
+                                            temp_task_sequence = [find_component(robot_items[0])]
+                                            graph = dict(graph_right)
+
+                                            c = dijkstra(graph,BEAST[0],temp_task_sequence[0][0])
+
+                                            for j in range(1,len(c)):
+                                                b.append(c[j])
+
+                                            for k in range(len(b)):
+                                                print("BEAST is moving towards: {}".format(b[k]))
+                                                time.sleep(1)
+                                                if b[k] == 'C1' or b[k] == 'C2' or b[k] == 'C3' or b[k] == 'C4' or b[k] == 'C5' or b[k] == 'C6' :
+                                                    print("BEAST has arrived in station: {}".format(b[k]))
+                                                    print("BEAST is unloading")
+
+                                                    task_sequence.insert(0,find_component(robot_items[0]))
+                                                    BEAST[1] = find_component(robot_items[0])[1]
+                                                    BEAST[2] = find_component(robot_items[0])[2]
+                                            
+                                                    del robot_items[0]
+                                                    time.sleep(1)
+                                            b=[]
+
+                                            components_not_stored = []
+                                            components_stored = []
+                                            for component in Quality_List[0]:
+                                                if component in AS_storage:
+                                                    components_stored.append(component)
+                                                else:
+                                                    components_not_stored.append(component)
+                                            if  len(components_not_stored) == 1:
+                                                Quality_List[0].insert(0, Quality_List[0].pop(Quality_List[0].index(components_not_stored[0])))
+                                                QualityList[0].insert(0, QualityList[0].pop(QualityList[0].index(find_component(components_not_stored[0]))))
+                                                
+                                                
+                                                ProductList.insert(0,QualityList[0])
+                                                Product_List.insert(0,Quality_List[0])
+                                                task_sequence = [(QualityList[0])[i] for i in range(len(QualityList[0]))] + task_sequence
+                                                task_sequence = list(filter(lambda a: a[0] != 'AS', task_sequence))
+                                                
+                                                z=1
+                                                while z < len(task_sequence):
+                                                    task_sequence.insert(z, AS)
+                                                    z += 3
+                                                task_sequence.append(AS)
+                                                for i in range(len(task_sequence)):
+
+                                                    if BEAST[1] > 52.5:
+                                                        graph = dict(graph_right)
+                                                    else:
+                                                        graph = dict(graph_left)
+
+
+                                                    c = dijkstra(graph,BEAST[0],task_sequence[i][0])
+
+
+                                                    for j in range(1,len(c)):
+                                                        b.append(c[j])
+                                                    BEAST[1] = task_sequence[i][1] 
+                                                    BEAST[2] = task_sequence[i][2]
+
+                                            else:
+                                                b=[]
+                                                temp_task_sequence = [find_component(robot_items[0])]
+                                                graph = dict(graph_right)
+
+                                                c = dijkstra(graph,BEAST[0],temp_task_sequence[0][0])
 
                                                 for j in range(1,len(c)):
                                                     b.append(c[j])
-                                                BEAST[1] = task_sequence[i][1] 
-                                                BEAST[2] = task_sequence[i][2]
-                                break
 
-                            elif  (BEAST[1] < 52.5) and (len(robot_items) == 0):
-                                components_not_stored = []
-                                components_stored = []
-                                for component in Quality_List[0]:
-                                    if component in AS_storage:
-                                        components_stored.append(component)
-                                    else:
-                                        components_not_stored.append(component)
+                                                for k in range(len(b)):
+                                                    print("BEAST is moving towards: {}".format(b[k]))
+                                                    time.sleep(1)
+                                                    if b[k] == 'C1' or b[k] == 'C2' or b[k] == 'C3' or b[k] == 'C4' or b[k] == 'C5' or b[k] == 'C6' :
+                                                        print("BEAST has arrived in station: {}".format(b[k]))
+                                                        print("BEAST is unloading")
 
-                                if len(components_not_stored) ==1:
-                                    Quality_List[0] = Quality_List[0].insert(0, Quality_List[0].pop(Quality_List[0].index(components_not_stored[0])))
-                                    QualityList[0] = QualityList[0].insert(0, QualityList[0].pop(Quality_List[0].index(find_component(components_not_stored[0]))))
+                                                        task_sequence.insert(0,find_component(robot_items[0]))
+                                                        BEAST[1] = find_component(robot_items[0])[1]
+                                                        BEAST[2] = find_component(robot_items[0])[2]
+                                                
+                                                        del robot_items[0]
+                                                        time.sleep(1)
+                                                b=[]
+                                                Quality_List[0].insert(0, Quality_List[0].pop(Quality_List[0].index(components_not_stored[0])))
+                                                Quality_List[0].insert(0, Quality_List[0].pop(Quality_List[0].index(components_not_stored[1])))
+                                                QualityList[0].insert(0, QualityList[0].pop(QualityList[0].index(find_component(components_not_stored[0]))))
+                                                QualityList[0].insert(0, QualityList[0].pop(QualityList[0].index(find_component(components_not_stored[1]))))
+                                                
+                                                ProductList.insert(0,QualityList[0])
+                                                Product_List.insert(0,Quality_List[0])
+                                                task_sequence = [(QualityList[0])[i] for i in range(len(QualityList[0]))] + task_sequence
+                                                task_sequence = list(filter(lambda a: a[0] != 'AS', task_sequence))
+                                                
+                                                z=2
+                                                while z < len(task_sequence):
+                                                    task_sequence.insert(z, AS)
+                                                    z += 3
+                                                task_sequence.append(AS)
+                                                for i in range(len(task_sequence)):
 
-                                else:
-                                    Quality_List[0] = Quality_List[0].insert(0, Quality_List[0].pop(Quality_List[0].index(components_not_stored[0])))
-                                    Quality_List[0] = Quality_List[0].insert(0, Quality_List[0].pop(Quality_List[0].index(components_not_stored[1])))
-                                    QualityList[0] = QualityList[0].insert(0, QualityList[0].pop(Quality_List[0].index(find_component(components_not_stored[0]))))
-                                    QualityList[0] = QualityList[0].insert(0, QualityList[0].pop(Quality_List[0].index(find_component(components_not_stored[1]))))
-
-                                ProductList.insert(0,QualityList[0])
-                                Product_List.insert(0,Quality_List[0])
-                                task_sequence = [(QualityList[0])[i] for i in range(len(QualityList[0]))] + task_sequence
-                                task_sequence = list(filter(lambda a: a[0] != 'AS', task_sequence))
-                                
-                                z=2
-                                while z < len(task_sequence):
-                                    task_sequence.insert(z, AS)
-                                    z += 3
-                                task_sequence.append(AS)
-                                for i in range(len(task_sequence)):
-
-                                    if BEAST[1] > 52.5:
-                                        graph = dict(graph_right)
-                                    else:
-                                        graph = dict(graph_left)
+                                                    if BEAST[1] > 52.5:
+                                                        graph = dict(graph_right)
+                                                    else:
+                                                        graph = dict(graph_left)
 
 
-                                    c = dijkstra(graph,BEAST[0],task_sequence[i][0])
+                                                    c = dijkstra(graph,BEAST[0],task_sequence[i][0])
 
 
-                                    for j in range(1,len(c)):
-                                        b.append(c[j])
-                                    BEAST[1] = task_sequence[i][1] 
-                                    BEAST[2] = task_sequence[i][2] 
-                                
-                                break
-                            elif (BEAST[1] < 52.5) and (len(robot_items) == 1):
+                                                    for j in range(1,len(c)):
+                                                        b.append(c[j])
+                                                    BEAST[1] = task_sequence[i][1] 
+                                                    BEAST[2] = task_sequence[i][2]
+                                        
+                                        elif robot_items[0] in Quality_List[0] and robot_items[1] not in Quality_List[0]:
+                                            temp_task_sequence = [find_component(robot_items[1])]
+                                            graph = dict(graph_right)
 
-                                if robot_items[0] not in Quality_List[0]:
-                                    temp_task_sequence = [find_component(robot_items[0])]
-                                    graph = dict(graph_left)
+                                            c = dijkstra(graph,BEAST[0],temp_task_sequence[0][0])
 
-                                    c = dijkstra(graph,BEAST[0],temp_task_sequence[0][0])
-                                    for j in range(1,len(c)):
-                                        b.append(c[j])
-                                    for k in range(len(b)):
-                                        print("BEAST is moving towards: {}".format(b[k]))
-                                        time.sleep(1)
-                                        if b[k] == 'C1' or b[k] == 'C2' or b[k] == 'C3' or b[k] == 'C4' or b[k] == 'C5' or b[k] == 'C6' :
-                                            print("BEAST has arrived in station: {}".format(b[k]))
-                                            print("BEAST is unloading")
+                                            for j in range(1,len(c)):
+                                                b.append(c[j])
 
-                                            task_sequence.insert(0,find_component(robot_items[0]))
-                                            BEAST[1] = find_component(robot_items[0])[1]
-                                            BEAST[2] = find_component(robot_items[0])[2]
-                                    
-                                            robot_items=[]
-                                            time.sleep(1)
-                                    b=[]
+                                            for k in range(len(b)):
+                                                print("BEAST is moving towards: {}".format(b[k]))
+                                                time.sleep(1)
+                                                if b[k] == 'C1' or b[k] == 'C2' or b[k] == 'C3' or b[k] == 'C4' or b[k] == 'C5' or b[k] == 'C6' :
+                                                    print("BEAST has arrived in station: {}".format(b[k]))
+                                                    print("BEAST is unloading")
+
+                                                    task_sequence.insert(0,find_component(robot_items[0]))
+                                                    BEAST[1] = find_component(robot_items[0])[1]
+                                                    BEAST[2] = find_component(robot_items[0])[2]
+                                            
+                                                    del robot_items[1]
+                                                    time.sleep(1)
+                                            b=[]
+                                            components_not_stored = []
+                                            components_stored = []
+                                            for component in Quality_List[0]:
+                                                if component in AS_storage:
+                                                    components_stored.append(component)
+                                                else:
+                                                    components_not_stored.append(component)
+
+                                            if  len(components_not_stored) == 1:
+                                                Quality_List[0].insert(0, Quality_List[0].pop(Quality_List[0].index(components_not_stored[0])))
+                                                QualityList[0].insert(0, QualityList[0].pop(QualityList[0].index(find_component(components_not_stored[0]))))
+                                                
+                                                
+                                                ProductList.insert(0,QualityList[0])
+                                                Product_List.insert(0,Quality_List[0])
+                                                task_sequence = [(QualityList[0])[i] for i in range(len(QualityList[0]))] + task_sequence
+                                                task_sequence = list(filter(lambda a: a[0] != 'AS', task_sequence))
+                                                
+                                                z=1
+                                                while z < len(task_sequence):
+                                                    task_sequence.insert(z, AS)
+                                                    z += 3
+                                                task_sequence.append(AS)
+                                                for i in range(len(task_sequence)):
+
+                                                    if BEAST[1] > 52.5:
+                                                        graph = dict(graph_right)
+                                                    else:
+                                                        graph = dict(graph_left)
+
+
+                                                    c = dijkstra(graph,BEAST[0],task_sequence[i][0])
+
+
+                                                    for j in range(1,len(c)):
+                                                        b.append(c[j])
+                                                    BEAST[1] = task_sequence[i][1] 
+                                                    BEAST[2] = task_sequence[i][2]
+                                            else:
+                                                b=[]
+                                                temp_task_sequence = [find_component(robot_items[0])]
+                                                graph = dict(graph_right)
+
+                                                c = dijkstra(graph,BEAST[0],temp_task_sequence[0][0])
+
+                                                for j in range(1,len(c)):
+                                                    b.append(c[j])
+
+                                                for k in range(len(b)):
+                                                    print("BEAST is moving towards: {}".format(b[k]))
+                                                    time.sleep(1)
+                                                    if b[k] == 'C1' or b[k] == 'C2' or b[k] == 'C3' or b[k] == 'C4' or b[k] == 'C5' or b[k] == 'C6' :
+                                                        print("BEAST has arrived in station: {}".format(b[k]))
+                                                        print("BEAST is unloading")
+
+                                                        task_sequence.insert(0,find_component(robot_items[0]))
+                                                        BEAST[1] = find_component(robot_items[0])[1]
+                                                        BEAST[2] = find_component(robot_items[0])[2]
+                                                
+                                                        del robot_items[0]
+                                                        time.sleep(1)
+                                                b=[]
+                                                Quality_List[0].insert(0, Quality_List[0].pop(Quality_List[0].index(components_not_stored[0])))
+                                                Quality_List[0].insert(0, Quality_List[0].pop(Quality_List[0].index(components_not_stored[1])))
+                                                QualityList[0].insert(0, QualityList[0].pop(QualityList[0].index(find_component(components_not_stored[0]))))
+                                                QualityList[0].insert(0, QualityList[0].pop(QualityList[0].index(find_component(components_not_stored[1]))))
+                                                
+                                                ProductList.insert(0,QualityList[0])
+                                                Product_List.insert(0,Quality_List[0])
+                                                task_sequence = [(QualityList[0])[i] for i in range(len(QualityList[0]))] + task_sequence
+                                                task_sequence = list(filter(lambda a: a[0] != 'AS', task_sequence))
+                                                
+                                                z=2
+                                                while z < len(task_sequence):
+                                                    task_sequence.insert(z, AS)
+                                                    z += 3
+                                                task_sequence.append(AS)
+                                                for i in range(len(task_sequence)):
+
+                                                    if BEAST[1] > 52.5:
+                                                        graph = dict(graph_right)
+                                                    else:
+                                                        graph = dict(graph_left)
+
+
+                                                    c = dijkstra(graph,BEAST[0],task_sequence[i][0])
+
+
+                                                    for j in range(1,len(c)):
+                                                        b.append(c[j])
+                                                    BEAST[1] = task_sequence[i][1] 
+                                                    BEAST[2] = task_sequence[i][2]
+                                        
+                                        elif robot_items[0] in Quality_List[0] and robot_items[1] in Quality_List[0]:
+                                            components_not_stored = []
+                                            components_stored = []
+                                            for component in Quality_List[0]:
+                                                if component in AS_storage:
+                                                    components_stored.append(component)
+                                                else:
+                                                    components_not_stored.append(component)
+                                            if len(components_not_stored)==1:
+                                                b=[]
+                                                temp_task_sequence = [find_component(robot_items[0])]
+                                                graph = dict(graph_right)
+
+                                                c = dijkstra(graph,BEAST[0],temp_task_sequence[0][0])
+
+                                                for j in range(1,len(c)):
+                                                    b.append(c[j])
+
+                                                for k in range(len(b)):
+                                                    print("BEAST is moving towards: {}".format(b[k]))
+                                                    time.sleep(1)
+                                                    if b[k] == 'C1' or b[k] == 'C2' or b[k] == 'C3' or b[k] == 'C4' or b[k] == 'C5' or b[k] == 'C6' :
+                                                        print("BEAST has arrived in station: {}".format(b[k]))
+                                                        print("BEAST is unloading")
+
+                                                        task_sequence.insert(0,find_component(robot_items[0]))
+                                                        BEAST[1] = find_component(robot_items[0])[1]
+                                                        BEAST[2] = find_component(robot_items[0])[2]
+                                                
+                                                        del robot_items[0]
+                                                        time.sleep(1)
+
+                                                Quality_List[0].insert(0, Quality_List[0].pop(Quality_List[0].index(components_not_stored[0])))
+                                                QualityList[0].insert(0, QualityList[0].pop(QualityList[0].index(find_component(components_not_stored[0]))))
+                                                
+                                                
+                                                ProductList.insert(0,QualityList[0])
+                                                Product_List.insert(0,Quality_List[0])
+                                                task_sequence = [(QualityList[0])[i] for i in range(len(QualityList[0]))] + task_sequence
+                                                task_sequence = list(filter(lambda a: a[0] != 'AS', task_sequence))
+                                                
+                                                z=1
+                                                while z < len(task_sequence):
+                                                    task_sequence.insert(z, AS)
+                                                    z += 3
+                                                task_sequence.append(AS)
+                                                for i in range(len(task_sequence)):
+
+                                                    if BEAST[1] > 52.5:
+                                                        graph = dict(graph_right)
+                                                    else:
+                                                        graph = dict(graph_left)
+
+
+                                                    c = dijkstra(graph,BEAST[0],task_sequence[i][0])
+
+
+                                                    for j in range(1,len(c)):
+                                                        b.append(c[j])
+                                                    BEAST[1] = task_sequence[i][1] 
+                                                    BEAST[2] = task_sequence[i][2]
+                                            else:
+                                                temp_task_sequence = [find_component(robot_items[0]),find_component(robot_items[1])]
+                                                for i in range(len(temp_task_sequence)):
+                                                    if BEAST[1] > 52.5:
+                                                        graph = dict(graph_right)
+                                                    else:
+                                                        graph = dict(graph_left)
+                                                    for j in range(1,len(c)):
+                                                        b.append(c[j])
+                                                    for k in range(len(b)):
+                                                        print("BEAST is moving towards: {}".format(b[k]))
+                                                        time.sleep(1)
+                                                        if b[k] == 'C1' or b[k] == 'C2' or b[k] == 'C3' or b[k] == 'C4' or b[k] == 'C5' or b[k] == 'C6' :
+                                                            print("BEAST has arrived in station: {}".format(b[k]))
+                                                            print("BEAST is unloading")
+
+                                                            
+                                                            BEAST[1] = find_component(robot_items[0])[1]
+                                                            BEAST[2] = find_component(robot_items[0])[2]
+                                                            time.sleep(1)
+                                                task_sequence.insert(0,find_component(robot_items[0]))
+                                                task_sequence.insert(0,find_component(robot_items[1]))
+                                                robot_items=[]
+                                                b=[]
+                                                Quality_List[0].insert(0, Quality_List[0].pop(Quality_List[0].index(components_not_stored[0])))
+                                                Quality_List[0].insert(0, Quality_List[0].pop(Quality_List[0].index(components_not_stored[1])))
+                                                QualityList[0].insert(0, QualityList[0].pop(QualityList[0].index(find_component(components_not_stored[0]))))
+                                                QualityList[0].insert(0, QualityList[0].pop(QualityList[0].index(find_component(components_not_stored[1]))))
+                                                
+                                                ProductList.insert(0,QualityList[0])
+                                                Product_List.insert(0,Quality_List[0])
+                                                task_sequence = [(QualityList[0])[i] for i in range(len(QualityList[0]))] + task_sequence
+                                                task_sequence = list(filter(lambda a: a[0] != 'AS', task_sequence))
+                                                
+                                                z=2
+                                                while z < len(task_sequence):
+                                                    task_sequence.insert(z, AS)
+                                                    z += 3
+                                                task_sequence.append(AS)
+                                                for i in range(len(task_sequence)):
+
+                                                    if BEAST[1] > 52.5:
+                                                        graph = dict(graph_right)
+                                                    else:
+                                                        graph = dict(graph_left)
+
+
+                                                    c = dijkstra(graph,BEAST[0],task_sequence[i][0])
+
+
+                                                    for j in range(1,len(c)):
+                                                        b.append(c[j])
+                                                    BEAST[1] = task_sequence[i][1] 
+                                                    BEAST[2] = task_sequence[i][2]
+                                    break
+
+                                elif  (BEAST[1] < 52.5) and (len(robot_items) == 0):
                                     components_not_stored = []
                                     components_stored = []
                                     for component in Quality_List[0]:
@@ -1533,14 +2154,15 @@ while restart:
                                             components_not_stored.append(component)
 
                                     if len(components_not_stored) ==1:
-                                        Quality_List[0] = Quality_List[0].insert(0, Quality_List[0].pop(Quality_List[0].index(components_not_stored[0])))
-                                        QualityList[0] = QualityList[0].insert(0, QualityList[0].pop(Quality_List[0].index(find_component(components_not_stored[0]))))
+                                        Quality_List[0].insert(0, Quality_List[0].pop(Quality_List[0].index(components_not_stored[0])))
+                                        QualityList[0].insert(0, QualityList[0].pop(QualityList[0].index(find_component(components_not_stored[0]))))
+
                                     else:
-                                        Quality_List[0] = Quality_List[0].insert(0, Quality_List[0].pop(Quality_List[0].index(components_not_stored[0])))
-                                        Quality_List[0] = Quality_List[0].insert(0, Quality_List[0].pop(Quality_List[0].index(components_not_stored[1])))
-                                        QualityList[0] = QualityList[0].insert(0, QualityList[0].pop(Quality_List[0].index(find_component(components_not_stored[0]))))
-                                        QualityList[0] = QualityList[0].insert(0, QualityList[0].pop(Quality_List[0].index(find_component(components_not_stored[1]))))
-                                    b=[]
+                                        Quality_List[0].insert(0, Quality_List[0].pop(Quality_List[0].index(components_not_stored[0])))
+                                        Quality_List[0].insert(0, Quality_List[0].pop(Quality_List[0].index(components_not_stored[1])))
+                                        QualityList[0].insert(0, QualityList[0].pop(QualityList[0].index(find_component(components_not_stored[0]))))
+                                        QualityList[0].insert(0, QualityList[0].pop(QualityList[0].index(find_component(components_not_stored[1]))))
+
                                     ProductList.insert(0,QualityList[0])
                                     Product_List.insert(0,Quality_List[0])
                                     task_sequence = [(QualityList[0])[i] for i in range(len(QualityList[0]))] + task_sequence
@@ -1565,20 +2187,252 @@ while restart:
                                         for j in range(1,len(c)):
                                             b.append(c[j])
                                         BEAST[1] = task_sequence[i][1] 
-                                        BEAST[2] = task_sequence[i][2]
+                                        BEAST[2] = task_sequence[i][2] 
+                                    
+                                    break
+                                elif (BEAST[1] < 52.5) and (len(robot_items) == 1):
 
-                                elif robot_items[0] in Quality_List[0]:
-                                    components_not_stored = []
-                                    components_stored = []
-                                    for component in Quality_List[0]:
-                                        if component in AS_storage:
-                                            components_stored.append(component)
+                                    if robot_items[0] not in Quality_List[0]:
+                                        temp_task_sequence = [find_component(robot_items[0])]
+                                        graph = dict(graph_left)
+
+                                        c = dijkstra(graph,BEAST[0],temp_task_sequence[0][0])
+                                        for j in range(1,len(c)):
+                                            b.append(c[j])
+                                        for k in range(len(b)):
+                                            print("BEAST is moving towards: {}".format(b[k]))
+                                            time.sleep(1)
+                                            if b[k] == 'C1' or b[k] == 'C2' or b[k] == 'C3' or b[k] == 'C4' or b[k] == 'C5' or b[k] == 'C6' :
+                                                print("BEAST has arrived in station: {}".format(b[k]))
+                                                print("BEAST is unloading")
+
+                                                task_sequence.insert(0,find_component(robot_items[0]))
+                                                BEAST[1] = find_component(robot_items[0])[1]
+                                                BEAST[2] = find_component(robot_items[0])[2]
+                                        
+                                                robot_items=[]
+                                                time.sleep(1)
+                                        b=[]
+                                        components_not_stored = []
+                                        components_stored = []
+                                        for component in Quality_List[0]:
+                                            if component in AS_storage:
+                                                components_stored.append(component)
+                                            else:
+                                                components_not_stored.append(component)
+
+                                        if len(components_not_stored) ==1:
+                                            Quality_List[0].insert(0, Quality_List[0].pop(Quality_List[0].index(components_not_stored[0])))
+                                            QualityList[0].insert(0, QualityList[0].pop(QualityList[0].index(find_component(components_not_stored[0]))))
                                         else:
-                                            components_not_stored.append(component)
+                                            Quality_List[0].insert(0, Quality_List[0].pop(Quality_List[0].index(components_not_stored[0])))
+                                            Quality_List[0].insert(0, Quality_List[0].pop(Quality_List[0].index(components_not_stored[1])))
+                                            QualityList[0].insert(0, QualityList[0].pop(QualityList[0].index(find_component(components_not_stored[0]))))
+                                            QualityList[0].insert(0, QualityList[0].pop(QualityList[0].index(find_component(components_not_stored[1]))))
+                                        b=[]
+                                        ProductList.insert(0,QualityList[0])
+                                        Product_List.insert(0,Quality_List[0])
+                                        task_sequence = [(QualityList[0])[i] for i in range(len(QualityList[0]))] + task_sequence
+                                        task_sequence = list(filter(lambda a: a[0] != 'AS', task_sequence))
+                                        
+                                        z=2
+                                        while z < len(task_sequence):
+                                            task_sequence.insert(z, AS)
+                                            z += 3
+                                        task_sequence.append(AS)
+                                        for i in range(len(task_sequence)):
 
-                                    if len(components_not_stored) ==1:
-                                        Quality_List[0] = Quality_List[0].insert(0, Quality_List[0].pop(Quality_List[0].index(components_not_stored[0])))
-                                        QualityList[0] = QualityList[0].insert(0, QualityList[0].pop(Quality_List[0].index(find_component(components_not_stored[0]))))
+                                            if BEAST[1] > 52.5:
+                                                graph = dict(graph_right)
+                                            else:
+                                                graph = dict(graph_left)
+
+
+                                            c = dijkstra(graph,BEAST[0],task_sequence[i][0])
+
+
+                                            for j in range(1,len(c)):
+                                                b.append(c[j])
+                                            BEAST[1] = task_sequence[i][1] 
+                                            BEAST[2] = task_sequence[i][2]
+
+                                    elif robot_items[0] in Quality_List[0]:
+                                        components_not_stored = []
+                                        components_stored = []
+                                        for component in Quality_List[0]:
+                                            if component in AS_storage:
+                                                components_stored.append(component)
+                                            else:
+                                                components_not_stored.append(component)
+
+                                        if len(components_not_stored) ==1:
+                                            Quality_List[0].insert(0, Quality_List[0].pop(Quality_List[0].index(components_not_stored[0])))
+                                            QualityList[0].insert(0, QualityList[0].pop(QualityList[0].index(find_component(components_not_stored[0]))))
+                                            b=[]
+                                            ProductList.insert(0,QualityList[0])
+                                            Product_List.insert(0,Quality_List[0])
+                                            task_sequence = [(QualityList[0])[i] for i in range(len(QualityList[0]))] + task_sequence
+                                            task_sequence = list(filter(lambda a: a[0] != 'AS', task_sequence))
+                                            
+                                            z=1
+                                            while z < len(task_sequence):
+                                                task_sequence.insert(z, AS)
+                                                z += 3
+                                            task_sequence.append(AS)
+                                            for i in range(len(task_sequence)):
+
+                                                if BEAST[1] > 52.5:
+                                                    graph = dict(graph_right)
+                                                else:
+                                                    graph = dict(graph_left)
+
+
+                                                c = dijkstra(graph,BEAST[0],task_sequence[i][0])
+
+
+                                                for j in range(1,len(c)):
+                                                    b.append(c[j])
+                                                BEAST[1] = task_sequence[i][1] 
+                                                BEAST[2] = task_sequence[i][2]
+
+                                        else:
+
+                                            b=[]
+                                            temp_task_sequence = [find_component(robot_items[0])]
+                                            graph = dict(graph_right)
+
+                                            c = dijkstra(graph,BEAST[0],temp_task_sequence[0][0])
+
+                                            for j in range(1,len(c)):
+                                                b.append(c[j])
+
+                                            for k in range(len(b)):
+                                                print("BEAST is moving towards: {}".format(b[k]))
+                                                time.sleep(1)
+                                                if b[k] == 'C1' or b[k] == 'C2' or b[k] == 'C3' or b[k] == 'C4' or b[k] == 'C5' or b[k] == 'C6' :
+                                                    print("BEAST has arrived in station: {}".format(b[k]))
+                                                    print("BEAST is unloading")
+
+                                                    task_sequence.insert(0,find_component(robot_items[0]))
+                                                    BEAST[1] = find_component(robot_items[0])[1]
+                                                    BEAST[2] = find_component(robot_items[0])[2]
+                                            
+                                                    del robot_items[0]
+                                                    time.sleep(1)
+                                                    
+                                            Quality_List[0].insert(0, Quality_List[0].pop(Quality_List[0].index(components_not_stored[0])))
+                                            Quality_List[0].insert(0, Quality_List[0].pop(Quality_List[0].index(components_not_stored[1])))
+                                            QualityList[0].insert(0, QualityList[0].pop(QualityList[0].index(find_component(components_not_stored[0]))))
+                                            QualityList[0].insert(0, QualityList[0].pop(QualityList[0].index(find_component(components_not_stored[1]))))
+                                            b=[]
+                                            ProductList.insert(0,QualityList[0])
+                                            Product_List.insert(0,Quality_List[0])
+                                            task_sequence = [(QualityList[0])[i] for i in range(len(QualityList[0]))] + task_sequence
+                                            task_sequence = list(filter(lambda a: a[0] != 'AS', task_sequence))
+                                            
+                                            z=2
+                                            while z < len(task_sequence):
+                                                task_sequence.insert(z, AS)
+                                                z += 3
+                                            task_sequence.append(AS)
+                                            for i in range(len(task_sequence)):
+
+                                                if BEAST[1] > 52.5:
+                                                    graph = dict(graph_right)
+                                                else:
+                                                    graph = dict(graph_left)
+
+
+                                                c = dijkstra(graph,BEAST[0],task_sequence[i][0])
+
+
+                                                for j in range(1,len(c)):
+                                                    b.append(c[j])
+                                                BEAST[1] = task_sequence[i][1] 
+                                                BEAST[2] = task_sequence[i][2]
+                                    break   
+
+                                elif (BEAST[1] < 52.5) and (len(robot_items) == 2):
+                                    if robot_items[0] not in Quality_List[0] and robot_items[1] not in Quality_List[0]:
+                                        temp_task_sequence = [find_component(robot_items[0]),find_component(robot_items[1])]
+                                        for i in range(len(temp_task_sequence)):
+                                            if BEAST[1] > 52.5:
+                                                graph = dict(graph_left)
+                                            else:
+                                                graph = dict(graph_right)
+                                            c = dijkstra(graph,BEAST[0],temp_task_sequence[i][0])
+                                            for j in range(1,len(c)):
+                                                b.append(c[j])
+                                            for k in range(len(b)):
+                                                print("BEAST is moving towards: {}".format(b[k]))
+                                                time.sleep(1)
+                                                if b[k] == 'C1' or b[k] == 'C2' or b[k] == 'C3' or b[k] == 'C4' or b[k] == 'C5' or b[k] == 'C6' :
+                                                    print("BEAST has arrived in station: {}".format(b[k]))
+                                                    print("BEAST is unloading")
+
+                                                    
+                                                    BEAST[1] = find_component(robot_items[0])[1]
+                                                    BEAST[2] = find_component(robot_items[0])[2]
+                                                    time.sleep(1)
+                                            task_sequence.insert(0,find_component(robot_items[0]))
+                                            task_sequence.insert(0,find_component(robot_items[1]))
+                                            robot_items=[]
+                                            b=[]
+                                        if len(components_not_stored) ==1:
+                                            Quality_List[0].insert(0, Quality_List[0].pop(Quality_List[0].index(components_not_stored[0])))
+                                            QualityList[0].insert(0, QualityList[0].pop(QualityList[0].index(find_component(components_not_stored[0]))))
+                                        elif len(components_not_stored) >=2:
+                                            Quality_List[0].insert(0, Quality_List[0].pop(Quality_List[0].index(components_not_stored[0])))
+                                            Quality_List[0].insert(0, Quality_List[0].pop(Quality_List[0].index(components_not_stored[1])))
+                                            QualityList[0].insert(0, QualityList[0].pop(QualityList[0].index(find_component(components_not_stored[0]))))
+                                            QualityList[0].insert(0, QualityList[0].pop(QualityList[0].index(find_component(components_not_stored[1]))))
+                                        ProductList.insert(0,QualityList[0])
+                                        Product_List.insert(0,Quality_List[0])
+                                        task_sequence = [(QualityList[0])[i] for i in range(len(QualityList[0]))] + task_sequence
+                                        task_sequence = list(filter(lambda a: a[0] != 'AS', task_sequence))
+                                        
+                                        z=2
+                                        while z < len(task_sequence):
+                                            task_sequence.insert(z, AS)
+                                            z += 3
+                                        task_sequence.append(AS)
+                                        for i in range(len(task_sequence)):
+
+                                            if BEAST[1] > 52.5:
+                                                graph = dict(graph_left)
+                                            else:
+                                                graph = dict(graph_right)
+
+
+                                            c = dijkstra(graph,BEAST[0],task_sequence[i][0])
+
+
+                                            for j in range(1,len(c)):
+                                                b.append(c[j])
+                                            BEAST[1] = task_sequence[i][1] 
+                                            BEAST[2] = task_sequence[i][2]
+                                    elif robot_items[0] not in Quality_List[0] and robot_items[1] in Quality_List[0]:
+                                        temp_task_sequence = [find_component(robot_items[0])]
+                                        graph = dict(graph_left)
+
+                                        c = dijkstra(graph,BEAST[0],temp_task_sequence[0][0])
+                                        for j in range(1,len(c)):
+                                            b.append(c[j])
+                                        for k in range(len(b)):
+                                            print("BEAST is moving towards: {}".format(b[k]))
+                                            time.sleep(1)
+                                            if b[k] == 'C1' or b[k] == 'C2' or b[k] == 'C3' or b[k] == 'C4' or b[k] == 'C5' or b[k] == 'C6' :
+                                                print("BEAST has arrived in station: {}".format(b[k]))
+                                                print("BEAST is unloading")
+
+                                        
+                                                BEAST[1] = find_component(robot_items[0])[1]
+                                                BEAST[2] = find_component(robot_items[0])[2]
+                                        
+                                        
+                                                time.sleep(1)
+                                        robot_items.remove(robot_items[0])
+                                        task_sequence.insert(0,find_component(robot_items[0]))
                                         b=[]
                                         ProductList.insert(0,QualityList[0])
                                         Product_List.insert(0,Quality_List[0])
@@ -1606,244 +2460,84 @@ while restart:
                                             BEAST[1] = task_sequence[i][1] 
                                             BEAST[2] = task_sequence[i][2]
 
-                                    else:
+                                    elif robot_items[0] in Quality_List[0]:
+                                        Quality_List_check = list(Quality_List[0])
+                                        Quality_List_check.remove(robot_items[0])
+                                        if robot_items[1] in Quality_List_check:
+                                            b=[]
+                                            ProductList.insert(0,QualityList[0])
+                                            Product_List.insert(0,Quality_List[0])
+                                            task_sequence = [(QualityList[0])[i] for i in range(len(QualityList[0]))] + task_sequence
+                                            task_sequence = list(filter(lambda a: a[0] != 'AS', task_sequence))
+                                            
+                                            z=2
+                                            while z < len(task_sequence):
+                                                task_sequence.insert(z, AS)
+                                                z += 3
+                                            task_sequence.append(AS)
+                                            task_sequence.insert(0,AS)
+                                            for i in range(len(task_sequence)):
 
-                                        b=[]
-                                        temp_task_sequence = [find_component(robot_items[0])]
-                                        graph = dict(graph_right)
-
-                                        c = dijkstra(graph,BEAST[0],temp_task_sequence[0][0])
-
-                                        for j in range(1,len(c)):
-                                            b.append(c[j])
-
-                                        for k in range(len(b)):
-                                            print("BEAST is moving towards: {}".format(b[k]))
-                                            time.sleep(1)
-                                            if b[k] == 'C1' or b[k] == 'C2' or b[k] == 'C3' or b[k] == 'C4' or b[k] == 'C5' or b[k] == 'C6' :
-                                                print("BEAST has arrived in station: {}".format(b[k]))
-                                                print("BEAST is unloading")
-
-                                                task_sequence.insert(0,find_component(robot_items[0]))
-                                                BEAST[1] = find_component(robot_items[0])[1]
-                                                BEAST[2] = find_component(robot_items[0])[2]
-                                        
-                                                del robot_items[0]
-                                                time.sleep(1)
-                                                
-                                        Quality_List[0] = Quality_List[0].insert(0, Quality_List[0].pop(Quality_List[0].index(components_not_stored[0])))
-                                        Quality_List[0] = Quality_List[0].insert(0, Quality_List[0].pop(Quality_List[0].index(components_not_stored[1])))
-                                        QualityList[0] = QualityList[0].insert(0, QualityList[0].pop(Quality_List[0].index(find_component(components_not_stored[0]))))
-                                        QualityList[0] = QualityList[0].insert(0, QualityList[0].pop(Quality_List[0].index(find_component(components_not_stored[1]))))
-                                        b=[]
-                                        ProductList.insert(0,QualityList[0])
-                                        Product_List.insert(0,Quality_List[0])
-                                        task_sequence = [(QualityList[0])[i] for i in range(len(QualityList[0]))] + task_sequence
-                                        task_sequence = list(filter(lambda a: a[0] != 'AS', task_sequence))
-                                        
-                                        z=2
-                                        while z < len(task_sequence):
-                                            task_sequence.insert(z, AS)
-                                            z += 3
-                                        task_sequence.append(AS)
-                                        for i in range(len(task_sequence)):
-
-                                            if BEAST[1] > 52.5:
-                                                graph = dict(graph_right)
-                                            else:
-                                                graph = dict(graph_left)
+                                                if BEAST[1] > 52.5:
+                                                    graph = dict(graph_right)
+                                                else:
+                                                    graph = dict(graph_left)
 
 
-                                            c = dijkstra(graph,BEAST[0],task_sequence[i][0])
+                                                c = dijkstra(graph,BEAST[0],task_sequence[i][0])
 
 
+                                                for j in range(1,len(c)):
+                                                    b.append(c[j])
+                                                BEAST[1] = task_sequence[i][1] 
+                                                BEAST[2] = task_sequence[i][2]
+                                    
+                                        else:
+                                            temp_task_sequence = [find_component(robot_items[1])]
+                                            graph = dict(graph_left)
+
+                                            c = dijkstra(graph,BEAST[0],temp_task_sequence[0][0])
                                             for j in range(1,len(c)):
                                                 b.append(c[j])
-                                            BEAST[1] = task_sequence[i][1] 
-                                            BEAST[2] = task_sequence[i][2]
-                                break   
-
-                            elif (BEAST[1] < 52.5) and (len(robot_items) == 2):
-                                if robot_items[0] not in Quality_List[0] and robot_items[1] not in Quality_List[0]:
-                                    temp_task_sequence = [find_component(robot_items[0]),find_component(robot_items[1])]
-                                    for i in range(len(temp_task_sequence)):
-                                        if BEAST[1] > 52.5:
-                                            graph = dict(graph_left)
-                                        else:
-                                            graph = dict(graph_right)
-                                        c = dijkstra(graph,BEAST[0],temp_task_sequence[i][0])
-                                        for j in range(1,len(c)):
-                                            b.append(c[j])
-                                        for k in range(len(b)):
-                                            print("BEAST is moving towards: {}".format(b[k]))
-                                            time.sleep(1)
-                                            if b[k] == 'C1' or b[k] == 'C2' or b[k] == 'C3' or b[k] == 'C4' or b[k] == 'C5' or b[k] == 'C6' :
-                                                print("BEAST has arrived in station: {}".format(b[k]))
-                                                print("BEAST is unloading")
-
-                                                
-                                                BEAST[1] = find_component(robot_items[0])[1]
-                                                BEAST[2] = find_component(robot_items[0])[2]
+                                            for k in range(len(b)):
+                                                print("BEAST is moving towards: {}".format(b[k]))
                                                 time.sleep(1)
-                                        task_sequence.insert(0,find_component(robot_items[0]))
-                                        task_sequence.insert(0,find_component(robot_items[1]))
-                                        robot_items=[]
-                                        b=[]
-                                    if len(components_not_stored) ==1:
-                                        Quality_List[0] = Quality_List[0].insert(0, Quality_List[0].pop(Quality_List[0].index(components_not_stored[0])))
-                                        QualityList[0] = QualityList[0].insert(0, QualityList[0].pop(Quality_List[0].index(find_component(components_not_stored[0]))))
-                                    elif len(components_not_stored) >=2:
-                                        Quality_List[0] = Quality_List[0].insert(0, Quality_List[0].pop(Quality_List[0].index(components_not_stored[0])))
-                                        Quality_List[0] = Quality_List[0].insert(0, Quality_List[0].pop(Quality_List[0].index(components_not_stored[1])))
-                                        QualityList[0] = QualityList[0].insert(0, QualityList[0].pop(Quality_List[0].index(find_component(components_not_stored[0]))))
-                                        QualityList[0] = QualityList[0].insert(0, QualityList[0].pop(Quality_List[0].index(find_component(components_not_stored[1]))))
-                                    ProductList.insert(0,QualityList[0])
-                                    Product_List.insert(0,Quality_List[0])
-                                    task_sequence = [(QualityList[0])[i] for i in range(len(QualityList[0]))] + task_sequence
-                                    task_sequence = list(filter(lambda a: a[0] != 'AS', task_sequence))
-                                    
-                                    z=2
-                                    while z < len(task_sequence):
-                                        task_sequence.insert(z, AS)
-                                        z += 3
-                                    task_sequence.append(AS)
-                                    for i in range(len(task_sequence)):
+                                                if b[k] == 'C1' or b[k] == 'C2' or b[k] == 'C3' or b[k] == 'C4' or b[k] == 'C5' or b[k] == 'C6' :
+                                                    print("BEAST has arrived in station: {}".format(b[k]))
+                                                    print("BEAST is unloading")
 
-                                        if BEAST[1] > 52.5:
-                                            graph = dict(graph_left)
-                                        else:
-                                            graph = dict(graph_right)
+                                            
+                                                    BEAST[1] = find_component(robot_items[1])[1]
+                                                    BEAST[2] = find_component(robot_items[1])[2]
+                                            
+                                            
+                                                    time.sleep(1)
+                                            robot_items.remove(robot_items[1])
+                                            task_sequence.insert(0,find_component(robot_items[1]))
+                                            b=[]
+                                            ProductList.insert(0,QualityList[0])
+                                            Product_List.insert(0,Quality_List[0])
+                                            task_sequence = [(QualityList[0])[i] for i in range(len(QualityList[0]))] + task_sequence
+                                            task_sequence = list(filter(lambda a: a[0] != 'AS', task_sequence))
+                                            
+                                            z=1
+                                            while z < len(task_sequence):
+                                                task_sequence.insert(z, AS)
+                                                z += 3
+                                            task_sequence.append(AS)
+                                            for i in range(len(task_sequence)):
 
-
-                                        c = dijkstra(graph,BEAST[0],task_sequence[i][0])
+                                                if BEAST[1] > 52.5:
+                                                    graph = dict(graph_right)
+                                                else:
+                                                    graph = dict(graph_left)
 
 
-                                        for j in range(1,len(c)):
-                                            b.append(c[j])
-                                        BEAST[1] = task_sequence[i][1] 
-                                        BEAST[2] = task_sequence[i][2]
-                                elif robot_items[0] in Quality_List[0] and robot_items[1] in Quality_List[0].remove(Quality_List[robot_items[0]]):
-                                    b=[]
-                                    ProductList.insert(0,QualityList[0])
-                                    Product_List.insert(0,Quality_List[0])
-                                    task_sequence = [(QualityList[0])[i] for i in range(len(QualityList[0]))] + task_sequence
-                                    task_sequence = list(filter(lambda a: a[0] != 'AS', task_sequence))
-                                    
-                                    z=2
-                                    while z < len(task_sequence):
-                                        task_sequence.insert(z, AS)
-                                        z += 3
-                                    task_sequence.append(AS)
-                                    task_sequence.insert(0,AS)
-                                    for i in range(len(task_sequence)):
-
-                                        if BEAST[1] > 52.5:
-                                            graph = dict(graph_right)
-                                        else:
-                                            graph = dict(graph_left)
+                                                c = dijkstra(graph,BEAST[0],task_sequence[i][0])
 
 
-                                        c = dijkstra(graph,BEAST[0],task_sequence[i][0])
-
-
-                                        for j in range(1,len(c)):
-                                            b.append(c[j])
-                                        BEAST[1] = task_sequence[i][1] 
-                                        BEAST[2] = task_sequence[i][2]
-                                elif robot_items[0] not in Quality_List[0] and robot_items[1] in Quality_List[0]:
-                                    temp_task_sequence = [find_component(robot_items[0])]
-                                    graph = dict(graph_left)
-
-                                    c = dijkstra(graph,BEAST[0],temp_task_sequence[0][0])
-                                    for j in range(1,len(c)):
-                                        b.append(c[j])
-                                    for k in range(len(b)):
-                                        print("BEAST is moving towards: {}".format(b[k]))
-                                        time.sleep(1)
-                                        if b[k] == 'C1' or b[k] == 'C2' or b[k] == 'C3' or b[k] == 'C4' or b[k] == 'C5' or b[k] == 'C6' :
-                                            print("BEAST has arrived in station: {}".format(b[k]))
-                                            print("BEAST is unloading")
-
-                                    
-                                            BEAST[1] = find_component(robot_items[0])[1]
-                                            BEAST[2] = find_component(robot_items[0])[2]
-                                    
-                                    
-                                            time.sleep(1)
-                                    robot_items.remove(robot_items[0])
-                                    task_sequence.insert(0,find_component(robot_items[0]))
-                                    b=[]
-                                    ProductList.insert(0,QualityList[0])
-                                    Product_List.insert(0,Quality_List[0])
-                                    task_sequence = [(QualityList[0])[i] for i in range(len(QualityList[0]))] + task_sequence
-                                    task_sequence = list(filter(lambda a: a[0] != 'AS', task_sequence))
-                                    
-                                    z=1
-                                    while z < len(task_sequence):
-                                        task_sequence.insert(z, AS)
-                                        z += 3
-                                    task_sequence.append(AS)
-                                    for i in range(len(task_sequence)):
-
-                                        if BEAST[1] > 52.5:
-                                            graph = dict(graph_right)
-                                        else:
-                                            graph = dict(graph_left)
-
-
-                                        c = dijkstra(graph,BEAST[0],task_sequence[i][0])
-
-
-                                        for j in range(1,len(c)):
-                                            b.append(c[j])
-                                        BEAST[1] = task_sequence[i][1] 
-                                        BEAST[2] = task_sequence[i][2]
-                                elif robot_items[0] in Quality_List[0] and robot_items[1] not in Quality_List[0].remove(Quality_List[robot_items[0]]):
-                                    temp_task_sequence = [find_component(robot_items[1])]
-                                    graph = dict(graph_left)
-
-                                    c = dijkstra(graph,BEAST[0],temp_task_sequence[0][0])
-                                    for j in range(1,len(c)):
-                                        b.append(c[j])
-                                    for k in range(len(b)):
-                                        print("BEAST is moving towards: {}".format(b[k]))
-                                        time.sleep(1)
-                                        if b[k] == 'C1' or b[k] == 'C2' or b[k] == 'C3' or b[k] == 'C4' or b[k] == 'C5' or b[k] == 'C6' :
-                                            print("BEAST has arrived in station: {}".format(b[k]))
-                                            print("BEAST is unloading")
-
-                                    
-                                            BEAST[1] = find_component(robot_items[1])[1]
-                                            BEAST[2] = find_component(robot_items[1])[2]
-                                    
-                                    
-                                            time.sleep(1)
-                                    robot_items.remove(robot_items[1])
-                                    task_sequence.insert(0,find_component(robot_items[1]))
-                                    b=[]
-                                    ProductList.insert(0,QualityList[0])
-                                    Product_List.insert(0,Quality_List[0])
-                                    task_sequence = [(QualityList[0])[i] for i in range(len(QualityList[0]))] + task_sequence
-                                    task_sequence = list(filter(lambda a: a[0] != 'AS', task_sequence))
-                                    
-                                    z=1
-                                    while z < len(task_sequence):
-                                        task_sequence.insert(z, AS)
-                                        z += 3
-                                    task_sequence.append(AS)
-                                    for i in range(len(task_sequence)):
-
-                                        if BEAST[1] > 52.5:
-                                            graph = dict(graph_right)
-                                        else:
-                                            graph = dict(graph_left)
-
-
-                                        c = dijkstra(graph,BEAST[0],task_sequence[i][0])
-
-
-                                        for j in range(1,len(c)):
-                                            b.append(c[j])
-                                        BEAST[1] = task_sequence[i][1] 
-                                        BEAST[2] = task_sequence[i][2]                                   
-                                break
+                                                for j in range(1,len(c)):
+                                                    b.append(c[j])
+                                                BEAST[1] = task_sequence[i][1] 
+                                                BEAST[2] = task_sequence[i][2]                                   
+                                        break
