@@ -56,6 +56,21 @@ P3 = [C3,C3,C5]
 P4 = [C2,C3,C4]
 
 Products = [P1,P2,P3,P4]
+
+# Products for which we need to bring components in order to start assembling
+'''
+ProductList=[]
+df = pd.read_csv('agv_assembly_order_train.csv')
+for element in df.values:
+    if element[0] == 1:
+        ProductList.append(P1)
+    elif element[0] == 2:
+        ProductList.append(P2)
+    elif element[0] == 3:
+        ProductList.append(P3)
+    elif element[0] == 4:
+        ProductList.append(P4)
+'''
 ProductList = [P1,P3,P2]
 
 flag = False
