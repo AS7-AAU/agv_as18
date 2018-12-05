@@ -1255,7 +1255,7 @@ rp.Subscriber('arrived_at_target',Bool,loading_cb)
 try:
     global b
     b = sp_path(PathRequest(lol)).b
-    print(b)
+    print('got this',b)
 except rp.ServiceException as e:
     print(e)   
 
@@ -1264,7 +1264,6 @@ def send_waypoints():
     for k in range(len(b)):
             node = find_component(b[k])
             del node[0]
-            print(node)
             msg_b.append(node[0])
             msg_b.append(node[1])
             if b[k] == 'C1' or b[k] == 'C2' or b[k] == 'C3' or b[k] == 'C4' or b[k] == 'C5' or b[k] == 'C6' or b[k] == 'AS':
@@ -1275,6 +1274,6 @@ def send_waypoints():
     print(msg)
     waypoint_pub.publish(msg)
 
-send_waypoints()
+#send_waypoints()
 
 rp.spin()

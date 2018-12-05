@@ -120,7 +120,7 @@ def pos_cb(data):
 
 def server_cb(req):
     global BEAST
-    b=[] # list that will contain all the waypoints
+    path=[] # list that will contain all the waypoints
 
     # apply dijkstras algorithm for every task in the task sequence list
     for task in req.task_seq:
@@ -144,17 +144,13 @@ def server_cb(req):
 
         # appends the path waypoints in a list
         for i in range(1,len(c)):
-            b.append(c[i])
+            path.append(c[i])
         
         # update the position of the robot for the next iteration (needed for the new graph)
         BEAST[1] = find_component(task)[1]
         BEAST[2] = find_component(task)[2]
 
-    resp = PathResponse()
-    for el in b:
-        resp.b.append(el)
-    return resp
-
+    return PathResponse(path)
 
 rp.init_node('waypoint_optimization')
 rp.Subscriber('local_pos_ref', Transform, pos_cb)
