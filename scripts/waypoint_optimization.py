@@ -1,13 +1,14 @@
 #!/usr/bin/env python
 import numpy as np
-#import pandas as pd
-import sys
 import rospy as rp
+from sys import maxsize as infinity
 from geometry_msgs.msg import Transform
-from agv_as18.srv import *
+from agv_as18.srv import Path, PathResponse, PathRequest
+
+robot = [0.0,0.0]
 
 # locations
-BEAST = ['BEAST',170.0,125.0]
+BEAST = ['BEAST',0.0,0.0]
 AS = ['AS',170.0,125.0]
 C1 = ['C1',5.0,200.0]
 C2 = ['C2',5.0,170.0]
@@ -80,7 +81,6 @@ def dijkstra(graph,start,goal):
     shortest_distance = {}
     predecessor = {}
     unseenNodes = graph
-    infinity = sys.maxsize
     path = []
     for node in unseenNodes:
         shortest_distance[node] = infinity
@@ -114,12 +114,12 @@ def dijkstra(graph,start,goal):
         return path
 
 def pos_cb(data):
-  global BEAST
-  BEAST[1]=data.translation.x
-  BEAST[2]=data.translation.y
+  global robot
+  robot[0]=data.translation.x
+  robot[1]=data.translation.y
 
 def server_cb(req):
-    global BEAST
+    BEAST = ['BEAST', robot[0], robot[1]]
     path=[] # list that will contain all the waypoints
 
     # apply dijkstras algorithm for every task in the task sequence list
