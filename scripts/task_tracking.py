@@ -1495,6 +1495,7 @@ def loading_cb(data):
     if task_sequence[0][0] == 'C1' or task_sequence[0][0] == 'C2' or task_sequence[0][0] == 'C3' or task_sequence[0][0] == 'C4' or task_sequence[0][0] == 'C5' or task_sequence[0][0] == 'C6':
         del task_sequence[0]
         robot_items.append(task_sequence[0][0])
+        print("loading")
         rp.sleep(1)
     # if the waypoint is the assembly station, unload, delete the task, update the assembly storage and the quantities
     elif task_sequence[0][0] == 'AS':
@@ -1502,10 +1503,11 @@ def loading_cb(data):
         while len(robot_items) != 0:
             C_storage = fetch_cloud()
             if C_storage[components.index(robot_items[0])] < 3:
-                rp.sleep(1)
                 C_storage[components.index(robot_items[0])] += 1
                 set_cloud(C_storage)
                 del robot_items[0]
+                print("unloading")
+                rp.sleep(1)
 
     send_waypoints()
 
@@ -1514,7 +1516,7 @@ rp.Subscriber('local_pos_ref', Transform, pos_cb)
 rp.Subscriber('reassemble_check', Faulty, qc_cb)
 rp.Subscriber('arrived_at_target', Bool, loading_cb)
 waypoint_pub = rp.Publisher('nodes', Float32MultiArray, queue_size=1)
-# rp.wait_for_service('components')
+rp.wait_for_service('components')
 rp.wait_for_service('path_service')
 service_components = rp.ServiceProxy('components', Components)
 service_path = rp.ServiceProxy('path_service', Path)
