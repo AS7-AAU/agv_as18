@@ -6,7 +6,7 @@ from agv_as18.msg import Reference
 from math import sin, cos, pi, sqrt, atan2
 
 beast=[0.0,0.0,0.0]
-target=[5.0,200.0]
+target=[0.0,0.0]
 max_speed = 5
 
 def pos_ref_cb(data):

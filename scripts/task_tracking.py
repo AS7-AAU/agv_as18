@@ -89,24 +89,15 @@ def unloading(C_storage, component):
     return C_storage
 
 def send_waypoints():
-    #global path
-    msg_b = []
-    #print(path)
-    #for k in range(len(path)):
+    msg = Float32MultiArray()
     while 1:
-        k=0
-        node = find_component(path[k])
-        print(path[k], node)
-        msg_b.append(node[1])
-        msg_b.append(node[2])
-        if path[k] == 'C1' or path[k] == 'C2' or path[k] == 'C3' or path[k] == 'C4' or path[k] == 'C5' or path[k] == 'C6' or path[k] == 'AS':
+        node = find_component(path[0])
+        msg.data.append(node[1])
+        msg.data.append(node[2])
+        if path[0] == 'C1' or path[0] == 'C2' or path[0] == 'C3' or path[0] == 'C4' or path[0] == 'C5' or path[0] == 'C6' or path[0] == 'AS':
             del path[0]
             break
         del path[0]
-    msg = Float32MultiArray()
-    msg.data = msg_b
-    #print(path)
-    print('msg: ',msg.data)
     waypoint_pub.publish(msg)
 
 def serialize_tasks(tasks):
@@ -1491,10 +1482,9 @@ def qc_cb(data):
 
 def loading_cb(data):
     global robot_items
-    # If the waypoint is a component station, load and delete the task from the task sequence
+    # if the waypoint is a component station, load and delete the task from the task sequence
     if task_sequence[0][0] == 'C1' or task_sequence[0][0] == 'C2' or task_sequence[0][0] == 'C3' or task_sequence[0][0] == 'C4' or task_sequence[0][0] == 'C5' or task_sequence[0][0] == 'C6':
         robot_items.append(task_sequence[0][0])
-        print('robotitems', robot_items)
         del task_sequence[0]
         print("loading")
         rp.sleep(1)
@@ -1503,9 +1493,6 @@ def loading_cb(data):
         del task_sequence[0]
         while len(robot_items) != 0:
             C_storage = fetch_cloud()
-            print(C_storage)
-            print(robot_items[0])
-            print(components.index(robot_items[0]))
             if C_storage[components.index(robot_items[0])] < 3:
                 C_storage[components.index(robot_items[0])] += 1
                 set_cloud(C_storage)
@@ -1534,6 +1521,7 @@ while i < len(task_sequence):
 task_sequence.append(AS)
 
 request_new_path()
+waypoint_pub.publish(Float32MultiArray()) # first msg is not sent on topic..?!
 send_waypoints()
 
 rp.spin()
