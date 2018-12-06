@@ -46,7 +46,7 @@ def buffer_check():
             AS_storage.extend(C_storage[i]*[components[i]])
     print('AS storage', AS_storage)
     #check if the storage components are enough to construct the next product and return the new storage quantities
-    for component[0] in ProductList[0]:
+    component[0] for component in ProductList[0]:
         print('component', component)
         if len(AS_storage) > 0:
             for component_ in AS_storage:
