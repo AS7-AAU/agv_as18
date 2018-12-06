@@ -47,7 +47,7 @@ for element in df.values:
     elif element[0] == 4:
         ProductList.append(P4)
 '''
-ProductList = [P1, P3, P2]  # this is for testing only
+ProductList = [P1, P2]  # this is for testing only
 
 def find_component(component):
     """Returns the name and the x, y position of the component of interest"""
@@ -111,6 +111,8 @@ def request_new_path():
     try:
         global path
         path = service_path(PathRequest(serialize_tasks(task_sequence))).path
+        print(path)
+        send_waypoints()
     except rp.ServiceException as e:
         print(e)
 
@@ -1485,8 +1487,8 @@ def loading_cb(data):
     # if the waypoint is a component station, load and delete the task from the task sequence
     if task_sequence[0][0] == 'C1' or task_sequence[0][0] == 'C2' or task_sequence[0][0] == 'C3' or task_sequence[0][0] == 'C4' or task_sequence[0][0] == 'C5' or task_sequence[0][0] == 'C6':
         robot_items.append(task_sequence[0][0])
+        print("loading: {}".format(task_sequence[0][0]))
         del task_sequence[0]
-        print("loading")
         rp.sleep(1)
     # if the waypoint is the assembly station, unload, delete the task, update the assembly storage and the quantities
     elif task_sequence[0][0] == 'AS':
@@ -1496,8 +1498,8 @@ def loading_cb(data):
             if C_storage[components.index(robot_items[0])] < 3:
                 C_storage[components.index(robot_items[0])] += 1
                 set_cloud(C_storage)
+                print("unloading: {}".format(robot_items[0]))
                 del robot_items[0]
-                print("unloading")
                 rp.sleep(1)
 
     send_waypoints()
@@ -1522,6 +1524,6 @@ task_sequence.append(AS)
 
 request_new_path()
 # first msg is not sent on topic..?!
-send_waypoints()
+#send_waypoints()
 
 rp.spin()
