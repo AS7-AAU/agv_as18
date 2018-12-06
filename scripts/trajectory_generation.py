@@ -7,18 +7,17 @@ from math import sin, cos, pi, sqrt, atan2
 
 beast=[0.0,0.0,0.0]
 target=[5.0,200.0]
-max_speed = 1
+max_speed = 5
 
 def pos_ref_cb(data):
   global beast
   beast[0] = data.translation.x # x-coordinate
   beast[1] = data.translation.y # y-coordinate
   beast[2] = data.rotation.z # heading
-  print(beast)
 
 def waypoints_cb(data):
   global target
-  target = data.data
+  target = list(data.data)
   print(target)
 
 rp.init_node('trajectory_generation')
@@ -28,6 +27,7 @@ pub = rp.Publisher('control_reference', Reference, queue_size=1)
 pub_target=rp.Publisher('arrived_at_target', Bool, queue_size=1)
 
 while not rp.is_shutdown():
+  global target
   if len(target) > 1:
     P = [target[0], target[1]] # target
     u = [P[0]-beast[0], P[1]-beast[1]] # vector from robot to target
@@ -37,16 +37,18 @@ while not rp.is_shutdown():
     phi_e = atan2(sin(e),cos(e)) # 4-quadrant angle of e
     v = max_speed
     if len(target) == 2:
-      if u_mag <= 0.5 and u_mag > 0.01:
+      if u_mag <= 0.5 and u_mag > 0.1:
         v *= u_mag
-      elif u_mag <= 0.01:
+      elif u_mag <= 0.1:
         v *= 0.0
-        del target[0]
-        del target[1]
+        target=[]
         pub_target.publish(True)
-    elif u_mag <= 0.05:
-        del target[0]
-        del target[1]
+    elif u_mag <= 0.1:
+      print(target)
+      del target[0]
+      print(target)
+      del target[0]
+      print(target)
         
     pub.publish(Reference(v, phi_e))
   else:

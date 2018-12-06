@@ -27,6 +27,7 @@ pub = rp.Publisher('local_pos_ref', Transform, queue_size=1)
 
 r = rp.Rate(1/dt)
 while not rp.is_shutdown():
+  print(beast)
   # move this to controller
   omega_A = (2*v + omega * L)/(2*R)
   omega_B = (2*v - omega * L)/(2*R)
