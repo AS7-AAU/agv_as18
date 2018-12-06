@@ -46,7 +46,6 @@ while not rp.is_shutdown():
     elif u_mag <= 0.1:
       print(target)
       del target[0]
-      print(target)
       del target[0]
       print(target)
         

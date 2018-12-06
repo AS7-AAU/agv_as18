@@ -1,17 +1,15 @@
 #!/usr/bin/env python
-import time
 import rospy as rp
 from std_msgs.msg import Int32
 import sys
-import select
+from select import select
 
 def cb(data):
-    print ("You have five seconds to answer!")
-
-    i, o, e = select.select( [sys.stdin], [], [], 500 )
-
+    print ("Quality control: 5 seconds to press Enter")
+    i, o, e = select([sys.stdin], [], [], 5)
     if i:
-        print ("You said", sys.stdin.readline().strip())
+        #print ("You said", sys.stdin.readline().strip())
+        print('Defective product!')
         pub.publish(data)
     else:
         print ("Quality control passed!")

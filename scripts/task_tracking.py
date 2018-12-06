@@ -1511,19 +1511,18 @@ def loading_cb(data):
         # if the waypoint is the assembly station, unload, delete the task, update the assembly storage and the quantities
         elif temp_task_sequence[0][0] == 'AS':
             del temp_task_sequence[0]
-            while len(robot_items) != 0:
+            for component in robot_items:
                 C_storage = fetch_cloud()
-                if C_storage[components.index(robot_items[0])] < 3:
-                    C_storage[components.index(robot_items[0])] += 1
+                if C_storage[components.index(component)] < 3:
+                    C_storage[components.index(component)] += 1
                     set_cloud(C_storage)
-                    print("unloading: {}".format(robot_items[0]))
-                    del robot_items[0]
+                    print("unloading: {}".format(component))
+                    robot_items.remove(component)
                     rp.sleep(1)
     else:
         # if the waypoint is a component station, load and delete the task from the task sequence
         if task_sequence[0][0] == 'C1' or task_sequence[0][0] == 'C2' or task_sequence[0][0] == 'C3' or task_sequence[0][0] == 'C4' or task_sequence[0][0] == 'C5' or task_sequence[0][0] == 'C6':
             robot_items.append(task_sequence[0][0])
-            print("LLLLLLLLL")
             print("loading: {}".format(task_sequence[0][0]))
             del task_sequence[0]
             rp.sleep(1)

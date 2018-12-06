@@ -49,8 +49,6 @@ find_package(catkin REQUIRED COMPONENTS
 add_message_files(
   FILES
   Motor.msg
-  Waypoints.msg
-  Task.msg
   Reference.msg
   Faulty.msg
 )

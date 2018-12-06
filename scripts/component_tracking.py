@@ -9,9 +9,7 @@ def server_cb(req):
   if req.write:
     buffer = req.buffer
     print(buffer)
-  resp = ComponentsResponse()
-  resp.buffer = buffer
-  return resp
+  return ComponentsResponse(buffer)
 
 rp.init_node('component_tracking_server')
 s = rp.Service('components', Components, server_cb)
