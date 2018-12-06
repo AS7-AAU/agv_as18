@@ -53,6 +53,7 @@ def buffer_check():
     print('AS storage', AS_storage)
     #check if the storage components are enough to construct the next product and return the new storage quantities
     for component in tmp:
+        print('component', component)
         if len(AS_storage) > 0:
             for component_ in AS_storage:
                 if component == component_:
@@ -98,6 +99,7 @@ def qc_cb(data):
 
 rp.init_node('assembly')
 rp.wait_for_service('components')
+print('components')
 service_components = rp.ServiceProxy('components', Components)
 rp.Subscriber('qc', Int32, qc_cb)
 pub = rp.Publisher('product_assembled', Int32, queue_size=1)
