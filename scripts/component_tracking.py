@@ -2,12 +2,13 @@
 import rospy as rp
 from agv_as18.srv import *
 
-buffer=[]
+buffer=[0,0,0,0,0,0]
 
 def server_cb(req):
   global buffer
   if req.write:
     buffer = req.buffer
+    print(buffer)
   resp = ComponentsResponse()
   resp.buffer = buffer
   return resp

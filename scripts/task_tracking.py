@@ -125,7 +125,7 @@ def request_new_path():
 
 def fetch_cloud():
     try:
-        return service_components(ComponentsRequest()).buffer
+        return list(service_components(ComponentsRequest()).buffer)
     except rp.ServiceException as e:
         print(e)
 
@@ -1493,8 +1493,9 @@ def loading_cb(data):
     global robot_items
     # If the waypoint is a component station, load and delete the task from the task sequence
     if task_sequence[0][0] == 'C1' or task_sequence[0][0] == 'C2' or task_sequence[0][0] == 'C3' or task_sequence[0][0] == 'C4' or task_sequence[0][0] == 'C5' or task_sequence[0][0] == 'C6':
-        del task_sequence[0]
         robot_items.append(task_sequence[0][0])
+        print('robotitems', robot_items)
+        del task_sequence[0]
         print("loading")
         rp.sleep(1)
     # if the waypoint is the assembly station, unload, delete the task, update the assembly storage and the quantities
@@ -1502,6 +1503,9 @@ def loading_cb(data):
         del task_sequence[0]
         while len(robot_items) != 0:
             C_storage = fetch_cloud()
+            print(C_storage)
+            print(robot_items[0])
+            print(components.index(robot_items[0]))
             if C_storage[components.index(robot_items[0])] < 3:
                 C_storage[components.index(robot_items[0])] += 1
                 set_cloud(C_storage)
