@@ -1,45 +1,9 @@
 #!/usr/bin/env python
 import rospy as rp
-from agv_as18.srv import *
-from agv_as18.msg import Faulty
-import sys
 from time import time
+from agv_as18.srv import Components, ComponentsRequest, ComponentsResponse
+from agv_as18.msg import Faulty
 from std_msgs.msg import Int32
-
-rp.init_node('assembly')
-
-def fetch_cloud():
-  try:
-    resp = sp(ComponentsRequest())
-    return resp.buffer
-  except rp.ServiceException as e:
-    print(e)
-
-def set_cloud(buffer):
-  try:
-    sp(ComponentsRequest(1, buffer))
-  except rp.ServiceException as e:
-    print(e)
-
-rp.wait_for_service('components')
-sp = rp.ServiceProxy('components', Components)
-
-pub = rp.Publisher('product_assembled',Int32, queue_size=1)
-pub_2 = rp.Publisher('reassemble_check',Faulty, queue_size=1)
-
-def qc_cb(data):
-    global flag
-    ProductList.insert(0,Products[data.data])
-    y, _ = buffer_check()
-    pub_2.publish(Faulty(data.data, y))
-    flag = True
-
-
-rp.Subscriber('qc',Int32,qc_cb)
-
-
-
-
 
 comps = ['C1','C2','C3','C4','C5','C6']
 
@@ -54,7 +18,6 @@ P1 = [C1,C3,C4,C4]
 P2 = [C1,C2,C5,C6]
 P3 = [C3,C3,C5]
 P4 = [C2,C3,C4]
-
 Products = [P1,P2,P3,P4]
 
 # Products for which we need to bring components in order to start assembling
@@ -76,7 +39,6 @@ ProductList = [P1,P3,P2]
 flag = False
 
 def buffer_check():
-
     tmp = []
     for p in ProductList[0]:
         tmp.append(p[0])
@@ -112,12 +74,37 @@ def buffer_check():
             y = False
     return y, C_storage
 
+def fetch_cloud():
+  try:
+    return list(service_components(ComponentsRequest()).buffer)
+  except rp.ServiceException as e:
+    print(e)
+
+def set_cloud(buffer):
+  try:
+    service_components(ComponentsRequest(1, buffer))
+  except rp.ServiceException as e:
+    print(e)
+
+def qc_cb(data):
+    global flag
+    ProductList.insert(0,Products[data.data])
+    y, _ = buffer_check()
+    pub_2.publish(Faulty(data.data, y))
+    flag = True
+
+rp.init_node('assembly')
+rp.wait_for_service('components')
+service_components = rp.ServiceProxy('components', Components)
+rp.Subscriber('qc', Int32, qc_cb)
+pub = rp.Publisher('product_assembled', Int32, queue_size=1)
+pub_2 = rp.Publisher('reassemble_check', Faulty, queue_size=1)
+
 # Every time the robot unloads in the assembly station, check if the first component in the Product List can be assembled
 while not rp.is_shutdown():
     if len(ProductList)>0:
         y, C_storage = buffer_check()
         if y:
-            
             set_cloud(C_storage)
             a = time()
 

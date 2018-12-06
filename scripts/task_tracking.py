@@ -1521,7 +1521,7 @@ while i < len(task_sequence):
 task_sequence.append(AS)
 
 request_new_path()
-waypoint_pub.publish(Float32MultiArray()) # first msg is not sent on topic..?!
+# first msg is not sent on topic..?!
 send_waypoints()
 
 rp.spin()
