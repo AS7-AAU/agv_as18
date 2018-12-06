@@ -108,6 +108,7 @@ def serialize_tasks(tasks):
     for el in tasks:
         # append the waypoints name to the serialized list
         serial.append(el[0])
+    return serial
 
 def request_new_path():
     try:
