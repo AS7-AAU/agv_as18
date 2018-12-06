@@ -8,7 +8,7 @@ import select
 def cb(data):
     print ("You have five seconds to answer!")
 
-    i, o, e = select.select( [sys.stdin], [], [], 5 )
+    i, o, e = select.select( [sys.stdin], [], [], 500 )
 
     if i:
         print ("You said", sys.stdin.readline().strip())

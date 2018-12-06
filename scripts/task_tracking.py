@@ -7,8 +7,10 @@ from agv_as18.srv import *
 
 # global variables
 task_sequence = []  # order of components to gather and the AS unloading
+temp_task_sequence = []
 path = []  # this is a list of all the waypoints the robot will need to take to complete the product list
 robot_items = []  # contains a maximum of two components that the robot is carrying
+flag = False # true if the length of the temp_task_sequence is not 0
 
 # locations
 BEAST = ['BEAST', 0.0, 0.0]
@@ -28,7 +30,7 @@ components = ['C1', 'C2', 'C3', 'C4', 'C5', 'C6']
 
 # products defined by the components
 P1 = [C1, C3, C4, C4]
-P2 = [C1, C2, C5, C6]
+P2 = [C2, C1, C5, C6]
 P3 = [C3, C3, C5]
 P4 = [C2, C3, C4]
 Products = [P1, P2, P3, P4]
@@ -47,7 +49,7 @@ for element in df.values:
     elif element[0] == 4:
         ProductList.append(P4)
 '''
-ProductList = [P1, P2]  # this is for testing only
+ProductList = [P1,P2]  # this is for testing only
 
 def find_component(component):
     """Returns the name and the x, y position of the component of interest"""
@@ -107,10 +109,10 @@ def serialize_tasks(tasks):
         serial.append(el[0])
     return serial
 
-def request_new_path():
+def request_new_path(seq):
     try:
         global path
-        path = service_path(PathRequest(serialize_tasks(task_sequence))).path
+        path = service_path(PathRequest(serialize_tasks(seq))).path
         print(path)
         send_waypoints()
     except rp.ServiceException as e:
@@ -137,8 +139,10 @@ def qc_cb(data):
     Quality_List = [component[0] for component in Products[data.product]]
     QualityList = [component for component in Products[data.product]]
     global task_sequence
+    global temp_task_sequence
     global robot_items
     global path
+    global flag
     if data.y:
         # If the robot is on the right side and is empty
         if (BEAST[1] > 52.5) and (len(robot_items) == 0):
@@ -1221,6 +1225,8 @@ def qc_cb(data):
                         task_sequence.append(AS)
 
                     else:
+                        temp_task_sequence = [find_component(robot_items[0])]
+                        task_sequence.insert(0,find_component(robot_items[0]))
                         components_not_stored.insert(-1, components_not_stored.pop(
                             components_not_stored.index(robot_items[1])))
                         Quality_List.insert(0, Quality_List.pop(
@@ -1480,28 +1486,60 @@ def qc_cb(data):
                                 z += 3
                             task_sequence.append(AS)
 
-    request_new_path()
+    if len(temp_task_sequence) == 0:
+        request_new_path(task_sequence)
+    else:
+        flag = True
+        request_new_path(temp_task_sequence)
 
 def loading_cb(data):
     global robot_items
-    # if the waypoint is a component station, load and delete the task from the task sequence
-    if task_sequence[0][0] == 'C1' or task_sequence[0][0] == 'C2' or task_sequence[0][0] == 'C3' or task_sequence[0][0] == 'C4' or task_sequence[0][0] == 'C5' or task_sequence[0][0] == 'C6':
-        robot_items.append(task_sequence[0][0])
-        print("loading: {}".format(task_sequence[0][0]))
-        del task_sequence[0]
-        rp.sleep(1)
-    # if the waypoint is the assembly station, unload, delete the task, update the assembly storage and the quantities
-    elif task_sequence[0][0] == 'AS':
-        del task_sequence[0]
-        while len(robot_items) != 0:
-            C_storage = fetch_cloud()
-            if C_storage[components.index(robot_items[0])] < 3:
-                C_storage[components.index(robot_items[0])] += 1
-                set_cloud(C_storage)
-                print("unloading: {}".format(robot_items[0]))
-                del robot_items[0]
-                rp.sleep(1)
+    global flag
+    print(flag)
+    print('before',robot_items)
+    if flag:
+        # if the waypoint is a component station, load and delete the task from the task sequence
+        if temp_task_sequence[0][0] == 'C1' or temp_task_sequence[0][0] == 'C2' or temp_task_sequence[0][0] == 'C3' or temp_task_sequence[0][0] == 'C4' or temp_task_sequence[0][0] == 'C5' or temp_task_sequence[0][0] == 'C6':
+            robot_items.remove(temp_task_sequence[0][0])
+            print("unloading: {}".format(temp_task_sequence[0][0]))
+            del temp_task_sequence[0]
+            if len(temp_task_sequence) == 0:
+                flag = False
+                request_new_path(task_sequence)
+            rp.sleep(1)
+        
+        # if the waypoint is the assembly station, unload, delete the task, update the assembly storage and the quantities
+        elif temp_task_sequence[0][0] == 'AS':
+            del temp_task_sequence[0]
+            while len(robot_items) != 0:
+                C_storage = fetch_cloud()
+                if C_storage[components.index(robot_items[0])] < 3:
+                    C_storage[components.index(robot_items[0])] += 1
+                    set_cloud(C_storage)
+                    print("unloading: {}".format(robot_items[0]))
+                    del robot_items[0]
+                    rp.sleep(1)
+    else:
+        # if the waypoint is a component station, load and delete the task from the task sequence
+        if task_sequence[0][0] == 'C1' or task_sequence[0][0] == 'C2' or task_sequence[0][0] == 'C3' or task_sequence[0][0] == 'C4' or task_sequence[0][0] == 'C5' or task_sequence[0][0] == 'C6':
+            robot_items.append(task_sequence[0][0])
+            print("LLLLLLLLL")
+            print("loading: {}".format(task_sequence[0][0]))
+            del task_sequence[0]
+            rp.sleep(1)
 
+        # if the waypoint is the assembly station, unload, delete the task, update the assembly storage and the quantities
+        elif task_sequence[0][0] == 'AS':
+            del task_sequence[0]
+            while len(robot_items) != 0:
+                C_storage = fetch_cloud()
+                if C_storage[components.index(robot_items[0])] < 3:
+                    C_storage[components.index(robot_items[0])] += 1
+                    set_cloud(C_storage)
+                    print("unloading: {}".format(robot_items[0]))
+                    del robot_items[0]
+                    rp.sleep(1)
+    print('after',robot_items)
     send_waypoints()
 
 rp.init_node('task_tracking')
@@ -1522,7 +1560,7 @@ while i < len(task_sequence):
     i += 3
 task_sequence.append(AS)
 
-request_new_path()
+request_new_path(task_sequence)
 # first msg is not sent on topic..?!
 #send_waypoints()
 
