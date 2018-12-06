@@ -39,12 +39,6 @@ ProductList = [P1,P3,P2]
 flag = False
 
 def buffer_check():
-    tmp = []
-    for p in ProductList[0]:
-        tmp.append(p[0])
-
-    print('tmp', tmp)
-
     C_storage = fetch_cloud()
     AS_storage = []
     for i in range(len(C_storage)):
@@ -52,7 +46,7 @@ def buffer_check():
             AS_storage.extend(C_storage[i]*[components[i]])
     print('AS storage', AS_storage)
     #check if the storage components are enough to construct the next product and return the new storage quantities
-    for component in tmp:
+    for component in ProductList[0]:
         print('component', component)
         if len(AS_storage) > 0:
             for component_ in AS_storage:
