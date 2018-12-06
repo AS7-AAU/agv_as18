@@ -1528,8 +1528,6 @@ while i < len(task_sequence):
 task_sequence.append(AS)
 
 request_new_path()
-while not rp.is_shutdown():
-    send_waypoints()
-    rp.sleep(1)
+send_waypoints()
 
-#rp.spin()
+rp.spin()

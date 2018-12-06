@@ -5,8 +5,8 @@ from std_msgs.msg import Float32MultiArray, Bool
 from agv_as18.msg import Reference
 from math import sin, cos, pi, sqrt, atan2
 
-beast=[0,0,0]
-target=[]
+beast=[0.0,0.0,0.0]
+target=[5.0,200.0]
 max_speed = 1
 
 def pos_ref_cb(data):
@@ -14,6 +14,7 @@ def pos_ref_cb(data):
   beast[0] = data.translation.x # x-coordinate
   beast[1] = data.translation.y # y-coordinate
   beast[2] = data.rotation.z # heading
+  print(beast)
 
 def waypoints_cb(data):
   global target
