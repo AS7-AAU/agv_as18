@@ -89,18 +89,24 @@ def unloading(C_storage, component):
     return C_storage
 
 def send_waypoints():
+    #global path
     msg_b = []
-    for k in range(len(path)):
+    #print(path)
+    #for k in range(len(path)):
+    while 1:
+        k=0
         node = find_component(path[k])
-        del node[0]
-        msg_b.append(node[0])
+        print(path[k], node)
         msg_b.append(node[1])
+        msg_b.append(node[2])
         if path[k] == 'C1' or path[k] == 'C2' or path[k] == 'C3' or path[k] == 'C4' or path[k] == 'C5' or path[k] == 'C6' or path[k] == 'AS':
+            del path[0]
             break
         del path[0]
     msg = Float32MultiArray()
     msg.data = msg_b
-    print(msg)
+    #print(path)
+    print('msg: ',msg.data)
     waypoint_pub.publish(msg)
 
 def serialize_tasks(tasks):
@@ -114,7 +120,6 @@ def request_new_path():
     try:
         global path
         path = service_path(PathRequest(serialize_tasks(task_sequence))).path
-        print('got this', path)
     except rp.ServiceException as e:
         print(e)
 
@@ -1522,10 +1527,9 @@ while i < len(task_sequence):
     i += 3
 task_sequence.append(AS)
 
-print(path)
 request_new_path()
-print(path)
+while not rp.is_shutdown():
+    send_waypoints()
+    rp.sleep(1)
 
-# send_waypoints()
-
-rp.spin()
+#rp.spin()
