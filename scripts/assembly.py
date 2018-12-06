@@ -5,7 +5,6 @@ from agv_as18.srv import Components, ComponentsRequest, ComponentsResponse
 from agv_as18.msg import Faulty
 from std_msgs.msg import Int32
 
-comps = ['C1','C2','C3','C4','C5','C6']
 
 AS = ['AS',170.0,125.0]
 C1 = ['C1',5.0,200.0]
@@ -19,6 +18,7 @@ P2 = [C1,C2,C5,C6]
 P3 = [C3,C3,C5]
 P4 = [C2,C3,C4]
 Products = [P1,P2,P3,P4]
+components = ['C1','C2','C3','C4','C5','C6']
 
 # Products for which we need to bring components in order to start assembling
 '''
@@ -43,11 +43,14 @@ def buffer_check():
     for p in ProductList[0]:
         tmp.append(p[0])
 
+    print('tmp', tmp)
+
     C_storage = fetch_cloud()
     AS_storage = []
     for i in range(len(C_storage)):
         if C_storage[i]>0:
-            AS_storage.extend(C_storage[i]*[comps[i]])
+            AS_storage.extend(C_storage[i]*[components[i]])
+    print('AS storage', AS_storage)
     #check if the storage components are enough to construct the next product and return the new storage quantities
     for component in tmp:
         if len(AS_storage) > 0:
