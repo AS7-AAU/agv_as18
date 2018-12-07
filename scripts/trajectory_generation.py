@@ -6,7 +6,7 @@ from agv_as18.msg import Reference
 from math import sin, cos, pi, sqrt, atan2
 
 beast=[0.0,0.0,0.0]
-target=[5.0,200.0]
+target=[0.0,0.0]
 max_speed = 5
 
 def pos_ref_cb(data):
@@ -27,7 +27,7 @@ pub = rp.Publisher('control_reference', Reference, queue_size=1)
 pub_target=rp.Publisher('arrived_at_target', Bool, queue_size=1)
 
 while not rp.is_shutdown():
-  global target
+  #global target
   if len(target) > 1:
     P = [target[0], target[1]] # target
     u = [P[0]-beast[0], P[1]-beast[1]] # vector from robot to target
