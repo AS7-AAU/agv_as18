@@ -1,3 +1,5 @@
 <launch>
-  <node name="task_tracking" pkg="agv_as18" type="task_tracking" />
+  <node name="task_tracking" pkg="agv_as18" type="task_tracking.py" output="screen"/>
+  <node name="component_tracking_server" pkg="agv_as18" type="component_tracking.py"/>
+  <node name="waypoint_optimization" pkg="agv_as18" type="waypoint_optimization.py"/>
 </launch>
