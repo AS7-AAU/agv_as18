@@ -92,15 +92,16 @@ def unloading(C_storage, component):
 
 def send_waypoints():
     msg = Float32MultiArray()
-    while 1:
-        node = find_component(path[0])
-        msg.data.append(node[1])
-        msg.data.append(node[2])
-        if path[0] == 'C1' or path[0] == 'C2' or path[0] == 'C3' or path[0] == 'C4' or path[0] == 'C5' or path[0] == 'C6' or path[0] == 'AS':
+    if len(path) > 0:
+        while 1:
+            node = find_component(path[0])
+            msg.data.append(node[1])
+            msg.data.append(node[2])
+            if path[0] == 'C1' or path[0] == 'C2' or path[0] == 'C3' or path[0] == 'C4' or path[0] == 'C5' or path[0] == 'C6' or path[0] == 'AS':
+                del path[0]
+                break
             del path[0]
-            break
-        del path[0]
-    waypoint_pub.publish(msg)
+        waypoint_pub.publish(msg)
 
 def serialize_tasks(tasks):
     serial = []

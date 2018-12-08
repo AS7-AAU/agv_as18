@@ -7,7 +7,7 @@ from math import sin, cos, pi, sqrt, atan2
 
 beast=[0.0,0.0,0.0]
 target=[0.0,0.0]
-max_speed = 50
+max_speed = 80
 
 def pos_ref_cb(data):
   global beast
@@ -24,6 +24,7 @@ rp.init_node('trajectory_generation')
 rp.Subscriber('local_pos_ref', Transform, pos_ref_cb)
 rp.Subscriber('nodes', Float32MultiArray, waypoints_cb)
 pub = rp.Publisher('control_reference', Reference, queue_size=1)
+pub_cmd_vel = rp.Publisher('cmd_vel', Reference, queue_size=1)
 pub_target=rp.Publisher('arrived_at_target', Bool, queue_size=1)
 
 while not rp.is_shutdown():
@@ -35,16 +36,24 @@ while not rp.is_shutdown():
     phi_d = atan2(u[1], u[0]) # desired heading
     e = phi_d - beast[2] # difference between desired and current heading
     phi_e = atan2(sin(e),cos(e)) # 4-quadrant angle of e
-    v = max_speed
-    if len(target) == 2:
-      if u_mag <= 50 and u_mag > 10:
-        v *= u_mag/100
+
+    if abs(phi_e) > 0.1:
+      v = 0
+    else:
+      v = max_speed
+      if len(target) == 2:
+        if u_mag <= 25 and u_mag > 10:
+          v *= u_mag/50
+        elif u_mag <= 10:
+          v *= 0.0
+          phi_e *= 0.0
+          target=[]
+          pub_target.publish(True) # request new target list from task_tracking node
       elif u_mag <= 10:
-        v *= 0.0
-        target=[]
-        pub_target.publish(True) # request new target list from task_tracking node
-    elif u_mag <= 10:
-      del target[0]
-      del target[0]
-        
+        del target[0]
+        del target[0]
+    
+    omega_A = (2*v + omega * L)/(2*R)
+    omega_B = (2*v - omega * L)/(2*R)
     pub.publish(Reference(v, phi_e))
+    pub_cmd_vel.publish(Reference(omega_A, omega_B))

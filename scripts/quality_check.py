@@ -7,6 +7,7 @@ from select import select
 def cb(data):
     print ("Quality control: 5 seconds to press Enter")
     i, o, e = select([sys.stdin], [], [], 5)
+    print(i)
     if i:
         #print ("You said", sys.stdin.readline().strip())
         print('Defective product!')

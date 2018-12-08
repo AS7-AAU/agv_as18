@@ -3,6 +3,5 @@
   <node name="component_tracking_server" pkg="agv_as18" type="component_tracking.py" output="screen"/>
   <node name="waypoint_optimization" pkg="agv_as18" type="waypoint_optimization.py" output="screen"/>
   <node name="assembly" pkg="agv_as18" type="assembly.py" output="screen"/>
-  <node name="quality_check" pkg="agv_as18" type="quality_check.py" output="screen"/>
   <node name="trajectory_generation" pkg="agv_as18" type="trajectory_generation.py" output="screen"/>
 </launch>
