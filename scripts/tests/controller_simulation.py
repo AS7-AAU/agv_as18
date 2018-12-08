@@ -45,7 +45,7 @@ while not rp.is_shutdown():
   pub.publish(msg)
 
   br = tf.TransformBroadcaster()
-  br.sendTransform((beast[0],beast[1],0),
+  br.sendTransform((beast[0]/100,beast[1]/100,0),
                     tf.transformations.quaternion_from_euler(0,0,beast[2]),
                     rp.Time.now(),
                     'agv',
