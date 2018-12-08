@@ -8,8 +8,8 @@ import tf
 
 v=0.0
 omega=0.0
-L = 0.17 # distance between two wheels
-R = 0.04 # radius of wheel
+L = 17 # distance between two wheels
+R = 4 # radius of wheel
 dt = 0.01
 beast = [0.0,0.0,0.0]
 
