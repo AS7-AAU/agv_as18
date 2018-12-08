@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import rospy as rp
-from geometry_msgs.msg import Transform
+from geometry_msgs.msg import Transform, TransformStamped
 from agv_as18.msg import Reference
 from math import pi, sin, cos
 import rosbag
@@ -42,6 +42,13 @@ while not rp.is_shutdown():
   msg.translation.y = beast[1]
   msg.rotation.z = beast[2]
   pub.publish(msg)
+
+  br = tf.TransformBroadcaster()
+  transf = TransformStamped()
+  transf.header.stamp=rp.Time.now()
+  transf.header.frame_id='agv'
+  transf.transform=msg
+  br.sendTransform(transf)
 
   # bag.write('beast', msg)
 

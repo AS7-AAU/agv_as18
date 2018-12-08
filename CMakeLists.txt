@@ -10,6 +10,7 @@ project(agv_as18)
 find_package(catkin REQUIRED COMPONENTS
   rospy
   message_generation
+  tf
 )
 
 ## System dependencies are found with CMake's conventions
