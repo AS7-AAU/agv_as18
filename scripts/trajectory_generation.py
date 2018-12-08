@@ -8,6 +8,8 @@ from math import sin, cos, pi, sqrt, atan2
 beast=[0.0,0.0,0.0]
 target=[0.0,0.0]
 max_speed = 80
+R = 2
+L = 12.5
 
 def pos_ref_cb(data):
   global beast
@@ -53,7 +55,7 @@ while not rp.is_shutdown():
         del target[0]
         del target[0]
     
-    omega_A = (2*v + omega * L)/(2*R)
-    omega_B = (2*v - omega * L)/(2*R)
+    omega_A = (2*v + phi_e * L)/(2*R)
+    omega_B = (2*v - phi_e * L)/(2*R)
     pub.publish(Reference(v, phi_e))
     pub_cmd_vel.publish(Reference(omega_A, omega_B))
