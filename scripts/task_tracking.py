@@ -35,7 +35,7 @@ P3 = [C3, C3, C5]
 P4 = [C2, C3, C4]
 Products = [P1, P2, P3, P4]
 
-# products for which we need to bring components in order to start assembling
+# products for which we need to bring components in order to start assemblying
 '''
 ProductList=[]
 df = pd.read_csv('agv_assembly_order_train.csv')
@@ -49,7 +49,7 @@ for element in df.values:
     elif element[0] == 4:
         ProductList.append(P4)
 '''
-ProductList = [P1,P2]  # this is for testing only
+ProductList = [P1,P3,P2]  # this is for testing only
 
 def find_component(component):
     """Returns the name and the x, y position of the component of interest"""
@@ -1560,7 +1560,5 @@ while i < len(task_sequence):
 task_sequence.append(AS)
 
 request_new_path(task_sequence)
-# first msg is not sent on topic..?!
-#send_waypoints()
 
 rp.spin()

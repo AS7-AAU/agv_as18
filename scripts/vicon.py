@@ -1,12 +1,11 @@
 #!/usr/bin/env python
 import rospy as rp
 from geometry_msgs.msg import Transform, TransformStamped
-from tf.transformations import euler_from_quaternion
+import tf
 from math import degrees
 
 is_set = False
 ref = Transform()
-
 
 def cb(data):
 	global is_set
@@ -17,11 +16,11 @@ def cb(data):
 	else:
 	    msg = Transform()
 	    msg.translation.x = round(
-	        data.transform.translation.x - ref.translation.x, 2)
+	        data.transform.translation.x - ref.translation.x, 2)*100
 	    msg.translation.y = round(
-	        data.transform.translation.y - ref.translation.y, 2)
+	        data.transform.translation.y - ref.translation.y, 2)*100
 	    msg.translation.z = round(
-	        data.transform.translation.z - ref.translation.z, 2)
+	        data.transform.translation.z - ref.translation.z, 2)*100
 	    msg.rotation.x = round(data.transform.rotation.x - ref.rotation.x, 1)
 	    msg.rotation.y = round(data.transform.rotation.y - ref.rotation.y, 1)
 	    msg.rotation.z = round(data.transform.rotation.z - ref.rotation.z, 1)
@@ -29,15 +28,14 @@ def cb(data):
 	    pub.publish(msg)
 
         br = tf.TransformBroadcaster()
-        br.sendTransform((beast[0]/100, beast[1]/100, 0),
-                        tf.transformations.quaternion_from_euler(0, 0, beast[2]),
+        br.sendTransform((msg.translation.x/100, msg.translation.y/100, 0),
+                        (msg.rotation.x,msg.rotation.y,msg.rotation.z,msg.rotation.w),
                         rp.Time.now(),
                         'agv',
                         'world')
 
 	    quat = (msg.rotation.x, msg.rotation.y, msg.rotation.z, msg.rotation.w)
-        eul = euler_from_quaternion(quat)
-	    eul = list(eul)
+        eul = list(tf.transformationseuler_from_quaternion(quat))
 	    eul[0] = degrees(eul[0])
 	    eul[1] = degrees(eul[1])
 	    eul[2] = degrees(eul[2])

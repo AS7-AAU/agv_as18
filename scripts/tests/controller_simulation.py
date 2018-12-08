@@ -22,7 +22,6 @@ def ref_cb(data):
 rp.init_node('controller_simulation')
 rp.Subscriber('control_reference', Reference, ref_cb)
 pub = rp.Publisher('local_pos_ref', Transform, queue_size=1)
-#pub = rp.Publisher('', , queue_size=1)
 
 # bag = rosbag.Bag('beast3.bag', 'w')
 
@@ -50,12 +49,6 @@ while not rp.is_shutdown():
                     rp.Time.now(),
                     'agv',
                     'world')
-  # transf = TransformStamped()
-  # transf.header.stamp=rp.Time.now()
-  # transf.header.frame_id='world'
-  # transf.child_frame_id='agv'
-  # transf.transform=msg
-  # br.sendTransformMessage(transf)
 
   # bag.write('beast', msg)
 

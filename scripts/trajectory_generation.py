@@ -7,7 +7,7 @@ from math import sin, cos, pi, sqrt, atan2
 
 beast=[0.0,0.0,0.0]
 target=[0.0,0.0]
-max_speed = 5
+max_speed = 50
 
 def pos_ref_cb(data):
   global beast
@@ -37,18 +37,14 @@ while not rp.is_shutdown():
     phi_e = atan2(sin(e),cos(e)) # 4-quadrant angle of e
     v = max_speed
     if len(target) == 2:
-      if u_mag <= 0.5 and u_mag > 0.1:
-        v *= u_mag
-      elif u_mag <= 0.1:
+      if u_mag <= 50 and u_mag > 10:
+        v *= u_mag/100
+      elif u_mag <= 10:
         v *= 0.0
         target=[]
-        pub_target.publish(True)
-    elif u_mag <= 0.1:
-      print(target)
+        pub_target.publish(True) # request new target list from task_tracking node
+    elif u_mag <= 10:
       del target[0]
       del target[0]
-      print(target)
         
     pub.publish(Reference(v, phi_e))
-  else:
-    pass# request new target list from task_tracking node
