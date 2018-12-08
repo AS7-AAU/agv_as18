@@ -9,7 +9,7 @@ def cb(data):
     i, o, e = select([sys.stdin], [], [], 5)
     print(i)
     if i:
-        #print ("You said", sys.stdin.readline().strip())
+        sys.stdin.readline().strip('\n')
         print('Defective product!')
         pub.publish(data)
     else:
