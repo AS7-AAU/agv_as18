@@ -14,16 +14,16 @@ flag = False # true if the length of the temp_task_sequence is not 0
 
 # locations
 BEAST = ['BEAST', 0.0, 0.0]
-AS = ['AS', 170.0, 125.0]
-C1 = ['C1', 5.0, 200.0]
-C2 = ['C2', 5.0, 170.0]
-C3 = ['C3', 5.0, 140.0]
-C4 = ['C4', 5.0, 110.0]
-C5 = ['C5', 5.0, 80.0]
-C6 = ['C6', 5.0, 50.0]
-MWP1 = ['MWP1', 52.5, 222.5]
-MWP2 = ['MWP2', 52.5, 125.0]
-MWP3 = ['MWP3', 52.5, 27.7]
+AS = ['AS', 125.0,66]
+C1 = ['C1',200.0,210]
+C2 = ['C2', 170.0,210]
+C3 = ['C3', 140.0,210]
+C4 = ['C4', 110.0,210]
+C5 = ['C5', 80.0,210]
+C6 = ['C6', 50.0,210]
+MWP1 = ['MWP1', 222.5,166]
+MWP2 = ['MWP2', 125.0,166]
+MWP3 = ['MWP3', 27.7,166]
 
 # name of the components
 components = ['C1', 'C2', 'C3', 'C4', 'C5', 'C6']
@@ -146,7 +146,7 @@ def qc_cb(data):
     global flag
     if data.y:
         # If the robot is on the right side and is empty
-        if (BEAST[1] > 52.5) and (len(robot_items) == 0):
+        if (BEAST[2] < 166) and (len(robot_items) == 0):
 
             # insert the components of the faulty product in the beginning of the task sequence
             task_sequence = [QualityList[i]
@@ -160,7 +160,7 @@ def qc_cb(data):
             task_sequence.append(AS)
 
         # if the robot is on the right side of the map and it carries one component
-        elif (BEAST[1] > 52.5) and (len(robot_items) == 1):
+        elif (BEAST[2] < 166) and (len(robot_items) == 1):
 
             C_storage = fetch_cloud()
             # checking if there is space in the buffers
@@ -196,7 +196,7 @@ def qc_cb(data):
                 task_sequence.append(AS)
 
         # If the robot is on the right side and it carries exactly 2 items
-        elif (BEAST[1] > 52.5) and (len(robot_items) == 2):
+        elif (BEAST[2] < 166) and (len(robot_items) == 2):
             C_storage = fetch_cloud()
             # If there is space in the buffers for the first component
             if C_storage[components.index(robot_items[0])] < 3:
@@ -271,7 +271,7 @@ def qc_cb(data):
                         z += 3
                     task_sequence.append(AS)
         # robot is on the left side and carries no components
-        elif (BEAST[1] < 52.5) and (len(robot_items) == 0):
+        elif (BEAST[2] > 166) and (len(robot_items) == 0):
             task_sequence = [QualityList[i]
                              for i in range(len(QualityList))] + task_sequence
             task_sequence = list(filter(lambda a: a[0] != 'AS', task_sequence))
@@ -283,7 +283,7 @@ def qc_cb(data):
             task_sequence.append(AS)
 
         # robot is on the left side and carries one component
-        elif (BEAST[1] < 52.5) and (len(robot_items) == 1):
+        elif (BEAST[2] > 166) and (len(robot_items) == 1):
 
             # if the component is part of the product that is assembled
             if robot_items[0] in Quality_List:
@@ -317,7 +317,7 @@ def qc_cb(data):
                 task_sequence.append(AS)
 
         # if the robot is on the left side and carries 2 components
-        elif (BEAST[1] < 52.5) and (len(robot_items) == 2):
+        elif (BEAST[2] > 166) and (len(robot_items) == 2):
             # if the first component is part of the product which is assembled
             if robot_items[0] in Quality_List:
                 Quality_List_check = list(Quality_List)
@@ -410,7 +410,7 @@ def qc_cb(data):
                 components_not_stored.append(component)
 
         # The robot is on the right side of the map and it does not carry anything
-        if (BEAST[1] > 52.5) and (len(robot_items) == 0):
+        if (BEAST[2] < 166) and (len(robot_items) == 0):
 
             # if only one component is missing
             if len(components_not_stored) == 1:
@@ -442,7 +442,7 @@ def qc_cb(data):
             task_sequence.append(AS)
 
         # the robot is on the right side and it carries exactly one component (can happen only if it carries the last component for the last product)
-        elif (BEAST[1] > 52.5) and (len(robot_items) == 1):
+        elif (BEAST[2] < 166) and (len(robot_items) == 1):
 
             if C_storage[components.index(robot_items[0])] < 3:
 
@@ -564,7 +564,7 @@ def qc_cb(data):
                         task_sequence.append(AS)
 
         # If the robot is on the right side and it carries exactly 2 components
-        elif (BEAST[1] > 52.5) and (len(robot_items) == 2):
+        elif (BEAST[2] < 166) and (len(robot_items) == 2):
 
             # If there is space in the buffers for the first component
             if C_storage[components.index(robot_items[0])] < 3:
@@ -999,7 +999,7 @@ def qc_cb(data):
                             task_sequence.append(AS)
 
         # if the robot is on the left side and is empty
-        elif (BEAST[1] < 52.5) and (len(robot_items) == 0):
+        elif (BEAST[2] > 166) and (len(robot_items) == 0):
             # if 1 component is missing
             if len(components_not_stored) == 1:
                 Quality_List.insert(0, Quality_List.pop(
@@ -1028,7 +1028,7 @@ def qc_cb(data):
             task_sequence.append(AS)
 
         # if the robot is on the left side and carries 1 component
-        elif (BEAST[1] < 52.5) and (len(robot_items) == 1):
+        elif (BEAST[2] > 166) and (len(robot_items) == 1):
 
             # if the component is not part of the faulty product
             if robot_items[0] not in Quality_List:
@@ -1136,7 +1136,7 @@ def qc_cb(data):
                         task_sequence.append(AS)
 
         # if the robot is on the left side and it carries 2 components
-        elif (BEAST[1] < 52.5) and (len(robot_items) == 2):
+        elif (BEAST[2] > 166) and (len(robot_items) == 2):
 
             # if both components are not part of the faulty product
             if robot_items[0] not in Quality_List and robot_items[1] not in Quality_List:
