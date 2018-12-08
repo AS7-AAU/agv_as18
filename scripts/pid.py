@@ -24,7 +24,6 @@ class PID:
 		"""
 		Calculate PID output value for given reference input and feedback
 		"""
-
 		self.error = self.set_point - process_value
 		self.P_value = self.Kp * self.error
 		self.D_value = self.Kd * ( self.error - self.Derivator)
@@ -83,33 +82,33 @@ omega_b=0.0
 
 def encoder_left(enc_left):
 	global enc_l
-	enc_l = enc_left
+	enc_l = enc_left.data
 
 def encoder_right(enc_right):
 	global enc_r
-	enc_r = enc_right
+	enc_r = enc_right.data
 
 def cmd_vel_cb(data):
 	global omega_a
 	global omega_b
-	omega_a = data.v
-	omega_b = data.omega
+	omega_a = float(data.v)
+	omega_b = float(data.omega)
 
 if __name__=="__main__":	
 	rp.init_node("pid")
-	rp.Subscriber("encoder_signal_left", encoder_l, encoder_left)	
-	rp.Subscriber("encoder_signal_right", encoder_r, encoder_right)
+	rp.Subscriber("encoder_signal_left", Float32, encoder_left)	
+	rp.Subscriber("encoder_signal_right", Float32, encoder_right)
 	rp.Subscriber("cmd_vel", Reference, cmd_vel_cb)
 	pub = rp.Publisher("motor_signal", Motor, queue_size=1)
-	
+	r=rp.Rate(1)
 	try:
-		while not rp.is_shutdown():			
-		    controller_right = PID()
+		controller_right = PID()
+		controller_left = PID()
+		while not rp.is_shutdown():
 			if controller_right.getPoint() != omega_a:
 				controller_right.setPoint(omega_a)
 			pid_r = controller_right.update(enc_r)
 				
-		    controller_left = PID()
 			if controller_left.getPoint() != omega_b:
 				controller_left.setPoint(omega_b)
 			pid_l = controller_left.update(-enc_l)
@@ -127,6 +126,7 @@ if __name__=="__main__":
 				pid_l = -54
 
 			pub.publish(pid_r, pid_l)
+			r.sleep()
 			 
 	except rp.ROSInterruptException:
 		destroy()
