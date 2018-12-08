@@ -63,7 +63,7 @@ def destroy():
 if __name__ == '__main__': # Program start from here
 	setup()
 	pub = rospy.Publisher('encoder_signal_left', Float32, queue_size = 1)
-    rospy.init_node('encoder_left')
+	rospy.init_node('encoder_left')
 
 	try:
 		encoder_signal_cb()
