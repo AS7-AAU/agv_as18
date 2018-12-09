@@ -1095,7 +1095,7 @@ def qc_cb(data):
                         task_sequence.append(AS)
                     # if the component we are carrying is one of the components that are missing
                     else:
-                        components_not_stored.insert(-1, components_not_stored.pop(
+                        components_not_stored.append(components_not_stored.pop(
                             components_not_stored.index(robot_items[0])))
                         Quality_List.insert(0, Quality_List.pop(
                             Quality_List.index(components_not_stored[1])))
@@ -1181,11 +1181,12 @@ def qc_cb(data):
                     task_sequence.append(AS)
                 # if 2 or more components are missing
                 else:
+                    # if the second component is not one of the misiing ones
                     if robot_items[1] not in components_not_stored:
                         temp_task_sequence = [find_component(
                             robot_items[0]), find_component(robot_items[1])]
-                        task_sequence.insert(find_component(robot_items[0]))
-                        task_sequence.insert(find_component(robot_items[1]))
+                        task_sequence.insert(0,find_component(robot_items[0]))
+                        task_sequence.insert(0,find_component(robot_items[1]))
 
                         Quality_List.insert(0, Quality_List.pop(
                             Quality_List.index(components_not_stored[0])))
@@ -1206,11 +1207,11 @@ def qc_cb(data):
                             task_sequence.insert(z, AS)
                             z += 3
                         task_sequence.append(AS)
-
+                    # if the second component is one of the missing ones
                     else:
                         temp_task_sequence = [find_component(robot_items[0])]
                         task_sequence.insert(0,find_component(robot_items[0]))
-                        components_not_stored.insert(-1, components_not_stored.pop(
+                        components_not_stored.append(components_not_stored.pop(
                             components_not_stored.index(robot_items[1])))
                         Quality_List.insert(0, Quality_List.pop(
                             Quality_List.index(components_not_stored[1])))
@@ -1236,7 +1237,7 @@ def qc_cb(data):
             elif robot_items[0] in Quality_List:
                 Quality_List_check = list(Quality_List)
                 Quality_List_check.remove(robot_items[0])
-                # if the second one is also part of the faulty product too
+                # if the second one is also part of the faulty product
                 if robot_items[1] in Quality_List_check:
                     # if we are missing 1 component
                     if len(components_not_stored) == 1:
@@ -1244,7 +1245,7 @@ def qc_cb(data):
                         if robot_items[0] not in components_not_stored and robot_items[1] not in components_not_stored:
                             temp_task_sequence = [
                                 find_component(robot_items[0])]
-                            task_sequence.insert(
+                            task_sequence.insert(0,
                                 find_component(robot_items[0]))
                             Quality_List.insert(0, Quality_List.pop(
                                 Quality_List.index(components_not_stored[0])))
@@ -1278,6 +1279,7 @@ def qc_cb(data):
 
                     # if 2 or more components are missing
                     else:
+                        # if both components are not the ones missing
                         if robot_items[0] not in components_not_stored and robot_items[1] not in components_not_stored:
                             temp_task_sequence = [find_component(
                                 robot_items[0]), find_component(robot_items[1])]
@@ -1305,12 +1307,13 @@ def qc_cb(data):
                                 task_sequence.insert(z, AS)
                                 z += 3
                             task_sequence.append(AS)
+                        # if the second one is one of the missing ones
                         elif robot_items[0] not in components_not_stored and robot_items[1] in components_not_stored:
                             temp_task_sequence = [
                                 find_component(robot_items[0])]
                             task_sequence.insert(
                                 0, find_component(robot_items[0]))
-                            components_not_stored.insert(-1, components_not_stored.pop(
+                            components_not_stored.append(components_not_stored.pop(
                                 components_not_stored.index(robot_items[1])))
                             Quality_List.insert(0, Quality_List.pop(
                                 Quality_List.index(components_not_stored[0])))
@@ -1331,7 +1334,7 @@ def qc_cb(data):
                                 task_sequence.insert(z, AS)
                                 z += 3
                             task_sequence.append(AS)
-
+                        # if the first one is one of the missing ones
                         elif robot_items[0] in components_not_stored:
                             components_not_stored_check = list(
                                 components_not_stored)
@@ -1363,7 +1366,7 @@ def qc_cb(data):
                                     task_sequence.insert(z, AS)
                                     z += 3
                                 task_sequence.append(AS)
-
+                            # if both of them are missing
                             elif robot_items[1] in components_not_stored_check:
                                 temp_task_sequence = [AS]
                                 components_not_stored.insert(-1, components_not_stored.pop(
@@ -1395,7 +1398,7 @@ def qc_cb(data):
                     # if we are missing 1 component
                     if len(components_not_stored) == 1:
                         temp_task_sequence = [find_component(robot_items[1])]
-                        task_sequence.insert(find_component(robot_items[1]))
+                        task_sequence.insert(0,find_component(robot_items[1]))
 
                         Quality_List.insert(0, Quality_List.pop(
                             Quality_List.index(components_not_stored[0])))
@@ -1414,12 +1417,13 @@ def qc_cb(data):
                         task_sequence.append(AS)
                     # if 2 or more components are missing
                     else:
+                        # if the first component is not one of the missing ones
                         if robot_items[0] not in components_not_stored:
                             temp_task_sequence = [find_component(
                                 robot_items[0]), find_component(robot_items[1])]
-                            task_sequence.insert(
+                            task_sequence.insert(0,
                                 find_component(robot_items[0]))
-                            task_sequence.insert(
+                            task_sequence.insert(0,
                                 find_component(robot_items[1]))
 
                             Quality_List.insert(0, Quality_List.pop(
