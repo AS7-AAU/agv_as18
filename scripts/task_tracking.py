@@ -612,7 +612,7 @@ def qc_cb(data):
                         # create a temporary task sequence and find the fastest path to carry the component back to the storage station
                         temp_task_sequence = [
                             AS, find_component(robot_items[1])]
-                        task_sequence.insert(find_component(robot_items[1]))
+                        task_sequence.insert(0,find_component(robot_items[1]))
 
                         # if only one is needed
                         if len(components_not_stored) == 1:
@@ -1162,7 +1162,7 @@ def qc_cb(data):
                 # if we are missing 1 component
                 if len(components_not_stored) == 1:
                     temp_task_sequence = [find_component(robot_items[0])]
-                    task_sequence.insert(find_component(robot_items[0]))
+                    task_sequence.insert(0,find_component(robot_items[0]))
 
                     Quality_List.insert(0, Quality_List.pop(
                         Quality_List.index(components_not_stored[0])))
