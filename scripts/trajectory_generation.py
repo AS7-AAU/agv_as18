@@ -28,7 +28,7 @@ rp.Subscriber('nodes', Float32MultiArray, waypoints_cb)
 pub = rp.Publisher('control_reference', Reference, queue_size=1)
 pub_cmd_vel = rp.Publisher('cmd_vel', Reference, queue_size=1)
 pub_target=rp.Publisher('arrived_at_target', Bool, queue_size=1)
-
+print(target)
 while not rp.is_shutdown():
   #global target
   if len(target) > 1:
