@@ -157,7 +157,7 @@ def qc_cb(data):
             z = 2
             while z < len(task_sequence):
                 task_sequence.insert(z, AS)
-                z += 3
+                z += 3  
             task_sequence.append(AS)
 
         # if the robot is on the right side of the map and it carries one component
@@ -447,6 +447,7 @@ def qc_cb(data):
             # if there is space for the first component
             if C_storage[components.index(robot_items[0])] < 3:
                 # if we need only one component
+                temp_task_sequence = [AS]
                 if len(components_not_stored) == 1:
                     # put in the beginning of the list and recalculate the waypoint list
                     Quality_List.insert(0, Quality_List.pop(
@@ -455,7 +456,6 @@ def qc_cb(data):
                         Quality_List.index(find_component(components_not_stored[0]))))
                 # if we need 2 or more components
                 else:
-                    temp_task_sequence = [AS]
                     # put two of them in the beginning of the list and recalculate the waypoint list
                     Quality_List.insert(0, Quality_List.pop(
                         Quality_List.index(components_not_stored[0])))
@@ -480,7 +480,7 @@ def qc_cb(data):
 
             # if there is no space in the buffers
             else:
-                    # if the component is not needed for the faulty product
+                # if the component is not needed for the faulty product
                 if robot_items[0] not in Quality_List:
                     # create a temporary task sequence and find the fastest path to carry the component back to the storage station
                     temp_task_sequence = [find_component(robot_items[0])]
@@ -620,18 +620,7 @@ def qc_cb(data):
                             Quality_List.insert(0, Quality_List.pop(
                                 Quality_List.index(components_not_stored[0])))
                             QualityList.insert(0, QualityList.pop(
-                                QualityList.index(find_component(components_not_stored[0]))))
-
-                            task_sequence = [QualityList[i] for i in range(
-                                len(QualityList))] + task_sequence
-                            task_sequence = list(
-                                filter(lambda a: a[0] != 'AS', task_sequence))
-
-                            z = 2
-                            while z < len(task_sequence):
-                                task_sequence.insert(z, AS)
-                                z += 3
-                            task_sequence.append(AS)
+                                QualityList.index(find_component(components_not_stored[0]))))                  
 
                         # if more than one components are needed
                         else:
@@ -645,16 +634,16 @@ def qc_cb(data):
                             QualityList.insert(0, QualityList.pop(
                                 QualityList.index(find_component(components_not_stored[1]))))
 
-                            task_sequence = [QualityList[i] for i in range(
-                                len(QualityList))] + task_sequence
-                            task_sequence = list(
-                                filter(lambda a: a[0] != 'AS', task_sequence))
+                        task_sequence = [QualityList[i] for i in range(
+                            len(QualityList))] + task_sequence
+                        task_sequence = list(
+                            filter(lambda a: a[0] != 'AS', task_sequence))
 
-                            z = 2
-                            while z < len(task_sequence):
-                                task_sequence.insert(z, AS)
-                                z += 3
-                            task_sequence.append(AS)
+                        z = 2
+                        while z < len(task_sequence):
+                            task_sequence.insert(z, AS)
+                            z += 3
+                        task_sequence.append(AS)
 
                     # if the second component is part of the faulty component
                     elif robot_items[1] in Quality_List:
@@ -723,17 +712,6 @@ def qc_cb(data):
                         QualityList.insert(0, QualityList.pop(
                             QualityList.index(find_component(components_not_stored[0]))))
 
-                        task_sequence = [QualityList[i] for i in range(
-                            len(QualityList))] + task_sequence
-                        task_sequence = list(
-                            filter(lambda a: a[0] != 'AS', task_sequence))
-
-                        z = 2
-                        while z < len(task_sequence):
-                            task_sequence.insert(z, AS)
-                            z += 3
-                        task_sequence.append(AS)
-
                     # if 2 or more components are needed
                     else:
                         Quality_List.insert(0, Quality_List.pop(
@@ -745,16 +723,16 @@ def qc_cb(data):
                         QualityList.insert(0, QualityList.pop(
                             QualityList.index(find_component(components_not_stored[1]))))
 
-                        task_sequence = [QualityList[i] for i in range(
-                            len(QualityList))] + task_sequence
-                        task_sequence = list(
-                            filter(lambda a: a[0] != 'AS', task_sequence))
+                    task_sequence = [QualityList[i] for i in range(
+                        len(QualityList))] + task_sequence
+                    task_sequence = list(
+                        filter(lambda a: a[0] != 'AS', task_sequence))
 
-                        z = 2
-                        while z < len(task_sequence):
-                            task_sequence.insert(z, AS)
-                            z += 3
-                        task_sequence.append(AS)
+                    z = 2
+                    while z < len(task_sequence):
+                        task_sequence.insert(z, AS)
+                        z += 3
+                    task_sequence.append(AS)
 
                 # if the component is needed for the assembly of the faulty component
                 elif robot_items[0] in Quality_List:
@@ -777,7 +755,7 @@ def qc_cb(data):
                             z += 3
                         task_sequence.append(AS)
                         
-
+                    # 2 or more components are missing
                     else:
                         # create a temporary task sequence and find the fastest path to carry the component back to its storage station
                         temp_task_sequence = [
@@ -902,7 +880,7 @@ def qc_cb(data):
 
                             temp_task_sequence = [
                                 find_component(robot_items[0])]
-                            task_sequence.insert(
+                            task_sequence.insert(0,
                                 find_component(robot_items[0]))
 
                             Quality_List.insert(0, Quality_List.pop(
@@ -1303,9 +1281,9 @@ def qc_cb(data):
                         if robot_items[0] not in components_not_stored and robot_items[1] not in components_not_stored:
                             temp_task_sequence = [find_component(
                                 robot_items[0]), find_component(robot_items[1])]
-                            task_sequence.insert(
+                            task_sequence.insert(0,
                                 find_component(robot_items[0]))
-                            task_sequence.insert(
+                            task_sequence.insert(0,
                                 find_component(robot_items[1]))
 
                             Quality_List.insert(0, Quality_List.pop(
