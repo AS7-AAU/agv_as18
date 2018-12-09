@@ -9,10 +9,10 @@ def cb(data):
     rotation = (data.transform.rotation.x, data.transform.rotation.y, data.transform.rotation.z, data.transform.rotation.w)
     # br = tf.TransformBroadcaster()
     # br.sendTransform(translation,
-                     rotation,
-                     rp.Time.now(),
-                     'agv',
-                     'world')
+    #                  rotation,
+    #                  rp.Time.now(),
+    #                  'agv',
+    #                  'world')
 
     eul = list(tf.transformations.euler_from_quaternion(rotation))
     # rp.loginfo(degrees(eul[2]))
