@@ -1477,9 +1477,6 @@ def loading_cb(data):
             robot_items.remove(temp_task_sequence[0][0])
             print("unloading: {}".format(temp_task_sequence[0][0]))
             del temp_task_sequence[0]
-            if len(temp_task_sequence) == 0:
-                flag = False
-                request_new_path(task_sequence)
             rp.sleep(1)
         
         # if the waypoint is the assembly station, unload, delete the task, update the assembly storage and the quantities
@@ -1495,9 +1492,12 @@ def loading_cb(data):
                     tmp_robot_items.remove(component)
                     rp.sleep(1)
             robot_items = list(tmp_robot_items)
-            if len(temp_task_sequence) == 0:
+
+        if len(temp_task_sequence) == 0:
                 flag = False
                 request_new_path(task_sequence)
+        else:
+            send_waypoints()
 
     # if the robot follows the official task sequence
     else:
