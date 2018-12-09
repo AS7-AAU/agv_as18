@@ -11,7 +11,7 @@ omega=0.0
 L = 17 # distance between two wheels
 R = 4 # radius of wheel
 dt = 0.01
-beast = [0.0,0.0,0.0]
+beast = [0.0,0.0,-pi/2]
 
 def ref_cb(data):
   global v
@@ -39,7 +39,7 @@ while not rp.is_shutdown():
   msg = Transform()
   msg.translation.x = beast[0]
   msg.translation.y = beast[1]
-  msg.rotation.z = beast[2]
+  msg.rotation.z = beast[2]+pi/2
   pub.publish(msg)
 
   br = tf.TransformBroadcaster()

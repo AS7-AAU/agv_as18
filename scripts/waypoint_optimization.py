@@ -8,16 +8,16 @@ from agv_as18.srv import Path, PathResponse, PathRequest
 robot = [0.0,0.0]
 
 # locations
-AS = ['AS', 125.0,66.0]
+AS = ['AS',125.0,66.0]
 C1 = ['C1',200.0,210.0]
-C2 = ['C2', 170.0,210.0]
-C3 = ['C3', 140.0,210.0]
-C4 = ['C4', 110.0,210.0]
-C5 = ['C5', 80.0,210.0]
-C6 = ['C6', 50.0,210.0]
-MWP1 = ['MWP1', 222.5,166.0]
-MWP2 = ['MWP2', 125.0,166.0]
-MWP3 = ['MWP3', 27.7,166.0]
+C2 = ['C2',170.0,210.0]
+C3 = ['C3',140.0,210.0]
+C4 = ['C4',110.0,210.0]
+C5 = ['C5',80.0,210.0]
+C6 = ['C6',50.0,210.0]
+MWP1 = ['MWP1',222.5,166.0]
+MWP2 = ['MWP2',125.0,166.0]
+MWP3 = ['MWP3',27.7,166.0]
 
 # distances
 AS_MWP1 = np.sqrt((AS[1]-MWP1[1])**2 + (AS[2]-MWP1[2])**2)
@@ -113,9 +113,9 @@ def dijkstra(graph,start,goal):
         return path
 
 def pos_cb(data):
-  global robot
-  robot[0]=data.translation.x
-  robot[1]=data.translation.y
+    global robot
+    robot[0]=data.translation.x
+    robot[1]=data.translation.y
 
 def server_cb(req):
     BEAST = ['BEAST', robot[0], robot[1]]
@@ -153,5 +153,6 @@ def server_cb(req):
 
 rp.init_node('waypoint_optimization')
 rp.Subscriber('local_pos_ref', Transform, pos_cb)
+rp.wait_for_message('local_pos_ref', Transform) # blocks until a message is received (here to make sure we have pose feedback)
 s = rp.Service('path_service', Path, server_cb)
 rp.spin()

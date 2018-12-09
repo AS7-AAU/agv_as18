@@ -57,5 +57,7 @@ while not rp.is_shutdown():
     
     omega_A = (2*v + phi_e * L)/(2*R)
     omega_B = (2*v - phi_e * L)/(2*R)
+    #print(v, phi_e)
+    print(omega_A, omega_B)
     pub.publish(Reference(v, phi_e))
     pub_cmd_vel.publish(Reference(omega_A, omega_B))
