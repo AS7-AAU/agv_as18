@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import rospy as rp
-from agv_as18.srv import *
+from agv_as18.srv import Components, ComponentsRequest, ComponentsResponse
 
 buffer=[0,0,0,0,0,0]
 

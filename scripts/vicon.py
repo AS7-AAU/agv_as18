@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 import rospy as rp
-from geometry_msgs.msg import Transform, TransformStamped
 import tf
 from math import degrees
+from geometry_msgs.msg import Transform, TransformStamped
 
 def cb(data):
-    translation = (data.transform.translation.x/100, data.transform.translation.y/100, 0)
+    translation = (data.transform.translation.x, data.transform.translation.y, 0)
     rotation = (data.transform.rotation.x, data.transform.rotation.y, data.transform.rotation.z, data.transform.rotation.w)
     # br = tf.TransformBroadcaster()
     # br.sendTransform(translation,
@@ -22,5 +22,5 @@ def cb(data):
 
 rp.init_node('vicon_test')
 rp.Subscriber('vicon/AS1/AS1', TransformStamped, cb)
-pub = rp.Publisher('local_pos_ref', Transform, queue_size=1)
+pub = rp.Publisher('local_pos_ref', Transform, queue_size=1, latch=True)
 rp.spin()

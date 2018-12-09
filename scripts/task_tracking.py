@@ -13,17 +13,17 @@ robot_items = []  # contains a maximum of two components that the robot is carry
 flag = False # true if the length of the temp_task_sequence is not 0
 
 # locations
-BEAST = ['BEAST', 0.0, 0.0]
-AS = ['AS', 125.0,66.0]
+BEAST = ['BEAST',0.0,0.0]
+AS = ['AS',125.0,66.0]
 C1 = ['C1',200.0,210.0]
-C2 = ['C2', 170.0,210.0]
-C3 = ['C3', 140.0,210.0]
-C4 = ['C4', 110.0,210.0]
-C5 = ['C5', 80.0,210.0]
-C6 = ['C6', 50.0,210.0]
-MWP1 = ['MWP1', 222.5,166.0]
-MWP2 = ['MWP2', 125.0,166.0]
-MWP3 = ['MWP3', 27.7,166.0]
+C2 = ['C2',170.0,210.0]
+C3 = ['C3',140.0,210.0]
+C4 = ['C4',110.0,210.0]
+C5 = ['C5',80.0,210.0]
+C6 = ['C6',50.0,210.0]
+MWP1 = ['MWP1',222.5,166.0]
+MWP2 = ['MWP2',125.0,166.0]
+MWP3 = ['MWP3',27.7,166.0]
 
 # name of the components
 components = ['C1', 'C2', 'C3', 'C4', 'C5', 'C6']
@@ -74,22 +74,6 @@ def find_component(component):
     elif component == 'AS':
         return AS
 
-def unloading(C_storage, component):
-    """Updating component storages in the assembly"""
-    if component == "C1":
-        C_storage[0] += 1
-    elif component == "C2":
-        C_storage[1] += 1
-    elif component == "C3":
-        C_storage[2] += 1
-    elif component == "C4":
-        C_storage[3] += 1
-    elif component == "C5":
-        C_storage[4] += 1
-    elif component == "C6":
-        C_storage[5] += 1
-    return C_storage
-
 def send_waypoints():
     msg = Float32MultiArray()
     if len(path) > 0:
@@ -101,6 +85,7 @@ def send_waypoints():
                 del path[0]
                 break
             del path[0]
+        print(msg)
         waypoint_pub.publish(msg)
 
 def serialize_tasks(tasks):
@@ -113,6 +98,7 @@ def serialize_tasks(tasks):
 def request_new_path(seq):
     try:
         global path
+        print(seq)
         path = service_path(PathRequest(serialize_tasks(seq))).path
         print(path)
         send_waypoints()
@@ -1504,7 +1490,7 @@ def loading_cb(data):
     print('before',robot_items)
     # if we are in a temporary task sequence situation (we need to unload components back to their stations)
     if flag:
-        # if the waypoint is a component station, load and delete the task from the task sequence
+        # if the waypoint is a component station, unload and delete the task from the task sequence
         if temp_task_sequence[0][0] == 'C1' or temp_task_sequence[0][0] == 'C2' or temp_task_sequence[0][0] == 'C3' or temp_task_sequence[0][0] == 'C4' or temp_task_sequence[0][0] == 'C5' or temp_task_sequence[0][0] == 'C6':
             robot_items.remove(temp_task_sequence[0][0])
             print("unloading: {}".format(temp_task_sequence[0][0]))
