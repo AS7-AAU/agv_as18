@@ -100,7 +100,7 @@ if __name__=="__main__":
 	rp.Subscriber("encoder_signal_right", Float32, encoder_right)
 	rp.Subscriber("cmd_vel", Reference, cmd_vel_cb)
 	pub = rp.Publisher("motor_signal", Motor, queue_size=1)
-	r=rp.Rate(1)
+	
 	try:
 		controller_right = PID()
 		controller_left = PID()
@@ -126,7 +126,6 @@ if __name__=="__main__":
 				pid_l = -54
 
 			pub.publish(pid_r, pid_l)
-			r.sleep()
 			 
 	except rp.ROSInterruptException:
 		destroy()
