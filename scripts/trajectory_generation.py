@@ -31,7 +31,7 @@ pub_target=rp.Publisher('arrived_at_target', Bool, queue_size=1)
 
 while not rp.is_shutdown():
   #global target
-  print(target)
+  # print(target)
   if len(target) > 1:
     P = [target[0], target[1]] # target
     u = [P[0]-beast[0], P[1]-beast[1]] # vector from robot to target

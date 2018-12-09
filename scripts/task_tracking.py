@@ -1469,11 +1469,9 @@ def qc_cb(data):
 def loading_cb(data):
     global robot_items
     global flag
-    # print(flag)
-    # print('before',robot_items)
+
     # if we are in a temporary task sequence situation (we need to unload components back to their stations)
     if flag:
-        print('flag raised')
         # if the waypoint is a component station, unload and delete the task from the task sequence
         if temp_task_sequence[0][0] == 'C1' or temp_task_sequence[0][0] == 'C2' or temp_task_sequence[0][0] == 'C3' or temp_task_sequence[0][0] == 'C4' or temp_task_sequence[0][0] == 'C5' or temp_task_sequence[0][0] == 'C6':
             robot_items.remove(temp_task_sequence[0][0])
@@ -1500,7 +1498,7 @@ def loading_cb(data):
             if len(temp_task_sequence) == 0:
                 flag = False
                 request_new_path(task_sequence)
-                
+
     # if the robot follows the official task sequence
     else:
         # if the waypoint is a component station, load and delete the task from the task sequence
@@ -1524,8 +1522,7 @@ def loading_cb(data):
                 else: 
                     robot_items.append(robot_items.pop(0))
 
-    # print('after',robot_items)
-    send_waypoints()
+        send_waypoints()
 
 rp.init_node('task_tracking')
 rp.Subscriber('local_pos_ref', Transform, pos_cb)
