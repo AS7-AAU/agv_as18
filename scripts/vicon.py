@@ -19,6 +19,7 @@ def cb(data):
     msg = Transform()
     msg.translation = data.transform.translation
     msg.rotation.z = eul[2]
+    pub.publish(msg)
 
 rp.init_node('vicon_test')
 rp.Subscriber('vicon/AS1/AS1', TransformStamped, cb)

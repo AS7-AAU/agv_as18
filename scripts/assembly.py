@@ -46,7 +46,7 @@ def buffer_check():
         if C_storage[components.index(component[0])] > 0:
             y = True
             C_storage[components.index(component[0])] -= 1
-        print(C_storage, y)
+        #print(C_storage, y)
     return y, C_storage
 
 def fetch_cloud():
