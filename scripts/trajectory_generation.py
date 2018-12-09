@@ -6,7 +6,7 @@ from agv_as18.msg import Reference
 from math import sin, cos, pi, sqrt, atan2
 
 beast=[0.0,0.0,-pi/2]
-target=[100.0,0.0]
+target=[]
 max_speed = 80
 R = 2
 L = 12.5

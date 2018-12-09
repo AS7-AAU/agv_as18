@@ -94,6 +94,13 @@ def cmd_vel_cb(data):
 	omega_a = float(data.v)
 	omega_b = float(data.omega)
 
+def saturate(signal):
+	if signal > 54:
+		return 54
+	elif signal < -54:
+		return -54
+	return signal
+
 if __name__=="__main__":	
 	rp.init_node("pid")
 	rp.Subscriber("encoder_signal_left", Float32, encoder_left)	
@@ -114,18 +121,13 @@ if __name__=="__main__":
 			pid_l = controller_left.update(-enc_l)
 				
 			# Saturated the signal
-			if pid_r > 54:
-				pid_r = 54
-			if pid_r < -54:
-				pid_r = -54
+			# pid_r = saturate(pid_r)
+			# pid_l = saturate(pid_l)
+			# TODO: Do we have to saturate the signal for the PID as well? if not then only saturate what we send
 
-			# Saturated the signal
-			if pid_l > 54:
-				pid_l = 54
-			if pid_l < -54:
-				pid_l = -54
-
-			pub.publish(pid_r, pid_l)
+			# use only one of these publishers at a time; the second is without the PID
+			# pub.publish(saturate(pid_r), saturate(pid_l))
+			pub.publish(saturate(omega_a), saturate(omega_b))
 			 
 	except rp.ROSInterruptException:
 		destroy()

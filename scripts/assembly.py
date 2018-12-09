@@ -74,11 +74,10 @@ def qc_cb(data):
     while check_buffer:
         print('waiting')
         pass
-    print('done waiting')
-    if assemblying:
-        flag = True
     ProductList.insert(0,Products[data.data])
     y, _ = buffer_check()
+    if assemblying:
+        flag = True
     reassembly_pub.publish(Faulty(data.data, y))
 
 rp.init_node('assembly')
