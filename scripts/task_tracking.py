@@ -144,6 +144,7 @@ def qc_cb(data):
     global robot_items
     global path
     global flag
+    # if we have enough components to start the assembly immediately
     if data.y:
         # If the robot is on the right side and is empty
         if (BEAST[2] < 166) and (len(robot_items) == 0):
@@ -165,7 +166,7 @@ def qc_cb(data):
             C_storage = fetch_cloud()
             # checking if there is space in the buffers
             if C_storage[components.index(robot_items[0])] < 3:
-
+                temp_task_sequence = [AS]
                 # insert the components of the faulty product in the beginning of the task sequence
                 task_sequence = [QualityList[i]
                                  for i in range(len(QualityList))] + task_sequence
@@ -176,7 +177,7 @@ def qc_cb(data):
                     task_sequence.insert(z, AS)
                     z += 3
                 task_sequence.append(AS)
-                task_sequence.insert(0, AS)
+                
             # if there is no space in the buffers
             else:
                 # create a temporary task sequence for the robot to return the component for which there is no space
@@ -204,7 +205,7 @@ def qc_cb(data):
                 C_storage_check[components.index(robot_items[0])] += 1
                 # and if there is space for the second component too
                 if C_storage_check[components.index(robot_items[1])] < 3:
-
+                    temp_task_sequence = [AS]
                     # insert the components of the faulty product in the beginning of the task sequence
                     task_sequence = [QualityList[i]
                                      for i in range(len(QualityList))] + task_sequence
@@ -215,7 +216,7 @@ def qc_cb(data):
                         task_sequence.insert(z, AS)
                         z += 3
                     task_sequence.append(AS)
-                    task_sequence.insert(0, AS)
+                    
 
                 # If there is no space for the second component
                 else:
@@ -324,7 +325,7 @@ def qc_cb(data):
                 Quality_List_check.remove(robot_items[0])
                 # and if the second one is part of the product as well
                 if robot_items[1] in Quality_List_check:
-
+                    temp_task_sequence = [AS]
                     task_sequence = [QualityList[i]
                                      for i in range(len(QualityList))] + task_sequence
                     task_sequence = list(
@@ -335,8 +336,8 @@ def qc_cb(data):
                         task_sequence.insert(z, AS)
                         z += 3
                     task_sequence.append(AS)
-                    # the first task would be to bring the products that the robot carries to the assembly station
-                    task_sequence.insert(0, AS)
+                    
+                    
 
                 # if the second component is not part of the product
                 else:
@@ -443,16 +444,18 @@ def qc_cb(data):
 
         # the robot is on the right side and it carries exactly one component (can happen only if it carries the last component for the last product)
         elif (BEAST[2] < 166) and (len(robot_items) == 1):
-
+            # if there is space for the first component
             if C_storage[components.index(robot_items[0])] < 3:
-
+                # if we need only one component
                 if len(components_not_stored) == 1:
                     # put in the beginning of the list and recalculate the waypoint list
                     Quality_List.insert(0, Quality_List.pop(
                         Quality_List.index(components_not_stored[0])))
                     QualityList.insert(0, QualityList.pop(
                         Quality_List.index(find_component(components_not_stored[0]))))
+                # if we need 2 or more components
                 else:
+                    temp_task_sequence = [AS]
                     # put two of them in the beginning of the list and recalculate the waypoint list
                     Quality_List.insert(0, Quality_List.pop(
                         Quality_List.index(components_not_stored[0])))
@@ -473,7 +476,7 @@ def qc_cb(data):
                         task_sequence.insert(z, AS)
                         z += 3
                     task_sequence.append(AS)
-                    task_sequence.insert(0, AS)
+                    
 
             # if there is no space in the buffers
             else:
@@ -590,6 +593,7 @@ def qc_cb(data):
                             QualityList.index(find_component(components_not_stored[1]))))
 
                     # insert the components of the faulty product in the beginning of the task sequence
+                    temp_task_sequence = [AS]
                     task_sequence = [QualityList[i]
                                      for i in range(len(QualityList))] + task_sequence
                     task_sequence = list(
@@ -599,7 +603,7 @@ def qc_cb(data):
                         task_sequence.insert(z, AS)
                         z += 3
                     task_sequence.append(AS)
-                    task_sequence.insert(0, AS)
+                    
 
                 # if there is no space for the second component
                 else:
@@ -656,7 +660,7 @@ def qc_cb(data):
                     elif robot_items[1] in Quality_List:
                         # if 1 component is missing
                         if len(components_not_stored) == 1:
-
+                            temp_task_sequence = [AS]
                             Quality_List.insert(0, Quality_List.pop(
                                 Quality_List.index(components_not_stored[0])))
                             QualityList.insert(0, QualityList.pop(
@@ -672,7 +676,7 @@ def qc_cb(data):
                                 task_sequence.insert(z, AS)
                                 z += 3
                             task_sequence.append(AS)
-                            task_sequence.insert(0, AS)
+                            
 
                         # if 2 or more components are missing
                         else:
@@ -756,7 +760,7 @@ def qc_cb(data):
                 elif robot_items[0] in Quality_List:
 
                     if len(components_not_stored) == 1:
-
+                        temp_task_sequence = [AS]
                         Quality_List.insert(0, Quality_List.pop(
                             Quality_List.index(components_not_stored[0])))
                         QualityList.insert(0, QualityList.pop(
@@ -772,7 +776,7 @@ def qc_cb(data):
                             task_sequence.insert(z, AS)
                             z += 3
                         task_sequence.append(AS)
-                        task_sequence.insert(0, AS)
+                        
 
                     else:
                         # create a temporary task sequence and find the fastest path to carry the component back to its storage station
@@ -1281,7 +1285,7 @@ def qc_cb(data):
                             task_sequence.append(AS)
                         # if one of them is one of the components missing
                         else:
-
+                            temp_task_sequence = [AS]
                             task_sequence = [QualityList[i] for i in range(
                                 len(QualityList))] + task_sequence
                             task_sequence = list(
@@ -1292,7 +1296,7 @@ def qc_cb(data):
                                 task_sequence.insert(z, AS)
                                 z += 3
                             task_sequence.append(AS)
-                            task_sequence.insert(0, AS)
+                           
 
                     # if 2 or more components are missing
                     else:
@@ -1383,6 +1387,7 @@ def qc_cb(data):
                                 task_sequence.append(AS)
 
                             elif robot_items[1] in components_not_stored_check:
+                                temp_task_sequence = [AS]
                                 components_not_stored.insert(-1, components_not_stored.pop(
                                     components_not_stored.index(robot_items[0])))
                                 components_not_stored.insert(-1, components_not_stored.pop(
@@ -1406,7 +1411,6 @@ def qc_cb(data):
                                     task_sequence.insert(z, AS)
                                     z += 3
                                 task_sequence.append(AS)
-                                task_sequence.insert(0, AS)
 
                 # if the second one is not part of the faulty product
                 else:
@@ -1498,6 +1502,7 @@ def loading_cb(data):
     global flag
     print(flag)
     print('before',robot_items)
+    # if we are in a temporary task sequence situation (we need to unload components back to their stations)
     if flag:
         # if the waypoint is a component station, load and delete the task from the task sequence
         if temp_task_sequence[0][0] == 'C1' or temp_task_sequence[0][0] == 'C2' or temp_task_sequence[0][0] == 'C3' or temp_task_sequence[0][0] == 'C4' or temp_task_sequence[0][0] == 'C5' or temp_task_sequence[0][0] == 'C6':
@@ -1520,6 +1525,7 @@ def loading_cb(data):
                     print("unloading: {}".format(component))
                     robot_items.remove(component)
                     rp.sleep(1)
+    # if the robot follows the official task sequence
     else:
         # if the waypoint is a component station, load and delete the task from the task sequence
         if task_sequence[0][0] == 'C1' or task_sequence[0][0] == 'C2' or task_sequence[0][0] == 'C3' or task_sequence[0][0] == 'C4' or task_sequence[0][0] == 'C5' or task_sequence[0][0] == 'C6':
@@ -1539,6 +1545,9 @@ def loading_cb(data):
                     print("unloading: {}".format(robot_items[0]))
                     del robot_items[0]
                     rp.sleep(1)
+                else: 
+                    robot_items.append(robot_items.pop(0))
+
     print('after',robot_items)
     send_waypoints()
 
