@@ -8,7 +8,6 @@ from agv_as18.srv import Path, PathResponse, PathRequest
 robot = [0.0,0.0]
 
 # locations
-BEAST = ['BEAST', 0.0, 0.0]
 AS = ['AS', 125.0,66.0]
 C1 = ['C1',200.0,210.0]
 C2 = ['C2', 170.0,210.0]
