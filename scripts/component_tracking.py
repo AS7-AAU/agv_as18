@@ -3,6 +3,7 @@ import rospy as rp
 from agv_as18.srv import Components, ComponentsRequest, ComponentsResponse
 
 buffer=[0,0,0,0,0,0]
+# buffer=[2,2,2,2,2,2]
 
 def server_cb(req):
   global buffer

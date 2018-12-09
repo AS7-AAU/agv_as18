@@ -74,22 +74,6 @@ def find_component(component):
     elif component == 'AS':
         return AS
 
-def unloading(C_storage, component):
-    """Updating component storages in the assembly"""
-    if component == "C1":
-        C_storage[0] += 1
-    elif component == "C2":
-        C_storage[1] += 1
-    elif component == "C3":
-        C_storage[2] += 1
-    elif component == "C4":
-        C_storage[3] += 1
-    elif component == "C5":
-        C_storage[4] += 1
-    elif component == "C6":
-        C_storage[5] += 1
-    return C_storage
-
 def send_waypoints():
     msg = Float32MultiArray()
     if len(path) > 0:
@@ -114,7 +98,7 @@ def request_new_path(seq):
     try:
         global path
         path = service_path(PathRequest(serialize_tasks(seq))).path
-        print(path)
+        # rp.loginfo(path)
         send_waypoints()
     except rp.ServiceException as e:
         print(e)
@@ -1474,6 +1458,8 @@ def qc_cb(data):
                                 z += 3
                             task_sequence.append(AS)
 
+    print('temp task seq {}'.format(temp_task_sequence))
+    print('task seq {}'.format(task_sequence))
     if len(temp_task_sequence) == 0:
         request_new_path(task_sequence)
     else:
@@ -1483,11 +1469,12 @@ def qc_cb(data):
 def loading_cb(data):
     global robot_items
     global flag
-    print(flag)
-    print('before',robot_items)
+    # print(flag)
+    # print('before',robot_items)
     # if we are in a temporary task sequence situation (we need to unload components back to their stations)
     if flag:
-        # if the waypoint is a component station, load and delete the task from the task sequence
+        print('flag raised')
+        # if the waypoint is a component station, unload and delete the task from the task sequence
         if temp_task_sequence[0][0] == 'C1' or temp_task_sequence[0][0] == 'C2' or temp_task_sequence[0][0] == 'C3' or temp_task_sequence[0][0] == 'C4' or temp_task_sequence[0][0] == 'C5' or temp_task_sequence[0][0] == 'C6':
             robot_items.remove(temp_task_sequence[0][0])
             print("unloading: {}".format(temp_task_sequence[0][0]))
@@ -1500,14 +1487,20 @@ def loading_cb(data):
         # if the waypoint is the assembly station, unload, delete the task, update the assembly storage and the quantities
         elif temp_task_sequence[0][0] == 'AS':
             del temp_task_sequence[0]
+            tmp_robot_items = list(robot_items)
             for component in robot_items:
                 C_storage = fetch_cloud()
                 if C_storage[components.index(component)] < 3:
                     C_storage[components.index(component)] += 1
                     set_cloud(C_storage)
                     print("unloading: {}".format(component))
-                    robot_items.remove(component)
+                    tmp_robot_items.remove(component)
                     rp.sleep(1)
+            robot_items = list(tmp_robot_items)
+            if len(temp_task_sequence) == 0:
+                flag = False
+                request_new_path(task_sequence)
+                
     # if the robot follows the official task sequence
     else:
         # if the waypoint is a component station, load and delete the task from the task sequence
@@ -1531,7 +1524,7 @@ def loading_cb(data):
                 else: 
                     robot_items.append(robot_items.pop(0))
 
-    print('after',robot_items)
+    # print('after',robot_items)
     send_waypoints()
 
 rp.init_node('task_tracking')

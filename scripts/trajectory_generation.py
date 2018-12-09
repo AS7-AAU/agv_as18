@@ -31,6 +31,7 @@ pub_target=rp.Publisher('arrived_at_target', Bool, queue_size=1)
 
 while not rp.is_shutdown():
   #global target
+  print(target)
   if len(target) > 1:
     P = [target[0], target[1]] # target
     u = [P[0]-beast[0], P[1]-beast[1]] # vector from robot to target
@@ -58,6 +59,6 @@ while not rp.is_shutdown():
     omega_A = (2*v + phi_e * L)/(2*R)
     omega_B = (2*v - phi_e * L)/(2*R)
     #print(v, phi_e)
-    print(omega_A, omega_B)
+    #print(omega_A, omega_B)
     pub.publish(Reference(v, phi_e))
     pub_cmd_vel.publish(Reference(omega_A, omega_B))

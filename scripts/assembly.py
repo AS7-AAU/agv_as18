@@ -37,16 +37,23 @@ for element in df.values:
 ProductList = [P1,P3,P2]
 
 flag = False
+assemblying = False
+check_buffer = False # this is to prevent race condition for accessing the ProductList
 
 def buffer_check():
     '''check if the storage components are enough to construct the next product and return the new storage quantities'''
+    global check_buffer
+    # check_buffer = True
     C_storage = fetch_cloud()
+    y = True
     for component in ProductList[0]:
-        y = False
         if C_storage[components.index(component[0])] > 0:
-            y = True
             C_storage[components.index(component[0])] -= 1
-        #print(C_storage, y)
+        else:
+            y = False
+            break
+        # print(C_storage, y)
+    # check_buffer = False
     return y, C_storage
 
 def fetch_cloud():
@@ -63,7 +70,13 @@ def set_cloud(buffer):
 
 def qc_cb(data):
     global flag
-    flag = True
+    global check_buffer
+    while check_buffer:
+        print('waiting')
+        pass
+    print('done waiting')
+    if assemblying:
+        flag = True
     ProductList.insert(0,Products[data.data])
     y, _ = buffer_check()
     reassembly_pub.publish(Faulty(data.data, y))
@@ -79,17 +92,21 @@ while not rp.is_shutdown():
     if len(ProductList)>0:
         y, C_storage = buffer_check()
         if y:
-            set_cloud(C_storage)
-            a = time()
             global flag
+            global assemblying
+            set_cloud(C_storage)
+            start_time = time()
+
+            assemblying = True
             rp.loginfo('assemblying: P'+str(Products.index(ProductList[0])+1))
-            while not flag and time()-a < 15:
+            while not flag and time()-start_time < 15:
                 pass
+            assemblying = False
 
             if flag == True:
-                rp.loginfo('stopped: P'+str(Products.index(ProductList[0])+1))
+                rp.loginfo('stopped: P'+str(Products.index(ProductList[1])+1))
                 C_storage = fetch_cloud()
-                for component in ProductList[0]:
+                for component in ProductList[1]:
                     C_storage[components.index(component[0])] += 1
                 set_cloud(C_storage)
                 flag = False
