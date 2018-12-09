@@ -1445,13 +1445,14 @@ def qc_cb(data):
                                 task_sequence.insert(z, AS)
                                 z += 3
                             task_sequence.append(AS)
+                        # if the first component is one of the missing ones
                         else:
                             temp_task_sequence = [
                                 find_component(robot_items[1])]
                             task_sequence.insert(
                                 0, find_component(robot_items[1]))
 
-                            components_not_stored.insert(-1, components_not_stored.pop(
+                            components_not_stored.append(components_not_stored.pop(
                                 components_not_stored.index(robot_items[0])))
                             Quality_List.insert(0, Quality_List.pop(
                                 Quality_List.index(components_not_stored[0])))
