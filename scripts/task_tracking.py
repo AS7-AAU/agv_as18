@@ -1072,7 +1072,7 @@ def qc_cb(data):
                     if robot_items[0] not in components_not_stored:
 
                         temp_task_sequence = [find_component(robot_items[0])]
-                        task_sequence.insert(find_component(robot_items[0]))
+                        task_sequence.insert(0,find_component(robot_items[0]))
 
                         Quality_List.insert(0, Quality_List.pop(
                             Quality_List.index(components_not_stored[0])))
