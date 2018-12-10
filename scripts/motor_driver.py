@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 import RPi.GPIO as gpio
 import rospy as rp
-from agv_as18.msg import Motor as motor
+from agv_as18.msg import Motor
+
+max_ang_vel = 54
 
 pins = {
     'AIN1' : 17,
@@ -38,13 +40,13 @@ def motor_signal_cb(data):
     else:
         gpio.output(pins['BIN1'], gpio.HIGH)
         gpio.output(pins['BIN2'], gpio.LOW)
-    omega_a = abs(data.a) * 100/10
-    omega_b = abs(data.b) * 100/10
+    omega_a = abs(data.a) * 100/max_ang_vel
+    omega_b = abs(data.b) * 100/max_ang_vel
     pwm_a.ChangeDutyCycle(omega_a)
     pwm_b.ChangeDutyCycle(omega_b)
 
 rp.init_node('motor_driver')
-rp.Subscriber('motor_signal', motor, motor_signal_cb)
+rp.Subscriber('motor_signal', Motor, motor_signal_cb)
 rp.spin()
 
 for key in pins.keys():

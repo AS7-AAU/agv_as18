@@ -1,0 +1,12 @@
+<launch>
+  <node name="task_tracking" pkg="agv_as18" type="task_tracking.py" output="screen"/>
+  <node name="component_tracking_server" pkg="agv_as18" type="component_tracking.py" output="screen"/>
+  <node name="waypoint_optimization" pkg="agv_as18" type="waypoint_optimization.py" output="screen"/>
+  <node name="assembly" pkg="agv_as18" type="assembly.py" output="screen"/>
+  <node name="trajectory_generation" pkg="agv_as18" type="trajectory_generation.py" output="screen"/>
+  <node name="encoder_left" pkg="agv_as18" type="encoder_left.py" output="screen"/>
+  <node name="encoder_right" pkg="agv_as18" type="encoder_right.py" output="screen"/>
+  <node name="motor_driver" pkg="agv_as18" type="motor_driver.py" output="screen"/>
+  <node name="pid" pkg="agv_as18" type="pid.py" output="screen"/>
+  <node name="vicon_agv" pkg="agv_as18" type="vicon.py" output="screen"/>
+</launch>

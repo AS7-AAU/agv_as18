@@ -4,6 +4,8 @@ from agv_as18.msg import Motor as motor
 
 import sys, select, termios, tty
 
+max_ang_vel = 54
+
 msg = """
 Reading from the keyboard  and Publishing to Twist!
 ---------------------------
@@ -16,14 +18,14 @@ CTRL-C to quit
 """
 
 moveBindings = {
-        'i':(10,10),
-        'o':(5,10),
-        'j':(10,-10),
-        'l':(-10,10),
-        'u':(10,5),
-        ',':(-10,-10),
-        '.':(-5,-10),
-        'm':(-10,-5),
+        'i':(max_ang_vel,max_ang_vel),
+        'o':(max_ang_vel/2,max_ang_vel),
+        'j':(max_ang_vel,-max_ang_vel),
+        'l':(-max_ang_vel,max_ang_vel),
+        'u':(max_ang_vel,max_ang_vel/2),
+        ',':(-max_ang_vel,-max_ang_vel),
+        '.':(-max_ang_vel,-max_ang_vel),
+        'm':(-max_ang_vel,-max_ang_vel),
     }
 
 def getKey():

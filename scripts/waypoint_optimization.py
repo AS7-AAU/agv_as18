@@ -8,17 +8,16 @@ from agv_as18.srv import Path, PathResponse, PathRequest
 robot = [0.0,0.0]
 
 # locations
-BEAST = ['BEAST',0.0,0.0]
-AS = ['AS',170.0,125.0]
-C1 = ['C1',5.0,200.0]
-C2 = ['C2',5.0,170.0]
-C3 = ['C3',5.0,140.0]
-C4 = ['C4',5.0,110.0]
-C5 = ['C5',5.0,80.0]
-C6 = ['C6',5.0,50.0]
-MWP1 = ['MWP1',52.5,222.5]
-MWP2 = ['MWP2',52.5,125.0]
-MWP3 = ['MWP3',52.5,27.7]
+AS = ['AS',125.0,66.0]
+C1 = ['C1',200.0,210.0]
+C2 = ['C2',170.0,210.0]
+C3 = ['C3',140.0,210.0]
+C4 = ['C4',110.0,210.0]
+C5 = ['C5',80.0,210.0]
+C6 = ['C6',50.0,210.0]
+MWP1 = ['MWP1',222.5,166.0]
+MWP2 = ['MWP2',125.0,166.0]
+MWP3 = ['MWP3',27.7,166.0]
 
 # distances
 AS_MWP1 = np.sqrt((AS[1]-MWP1[1])**2 + (AS[2]-MWP1[2])**2)
@@ -114,9 +113,9 @@ def dijkstra(graph,start,goal):
         return path
 
 def pos_cb(data):
-  global robot
-  robot[0]=data.translation.x
-  robot[1]=data.translation.y
+    global robot
+    robot[0]=data.translation.x
+    robot[1]=data.translation.y
 
 def server_cb(req):
     BEAST = ['BEAST', robot[0], robot[1]]
@@ -124,7 +123,7 @@ def server_cb(req):
 
     # apply dijkstras algorithm for every task in the task sequence list
     for task in req.task_seq:
-        if BEAST[1] > 52.5:
+        if BEAST[2] < 166:
             graph = {AS[0]:{MWP1[0]:AS_MWP1,MWP2[0]:AS_MWP2,MWP3[0]:AS_MWP3},MWP1[0]:{AS[0]:AS_MWP1,C1[0]:C1_MWP1,C2[0]:C2_MWP1,C3[0]:C3_MWP1,C4[0]:C4_MWP1,C5[0]:C5_MWP1,C6[0]:C6_MWP1},MWP2[0]:{AS[0]:AS_MWP2,C1[0]:C1_MWP2,C6[0]:C6_MWP2,C2[0]:C2_MWP2,C5[0]:C5_MWP2,C3[0]:C3_MWP2,C4[0]:C4_MWP2},
                     MWP3[0]:{AS[0]:AS_MWP3,C6[0]:C6_MWP3,C5[0]:C5_MWP3,C4[0]:C4_MWP3,C3[0]:C3_MWP3,C2[0]:C2_MWP3,C1[0]:C1_MWP3},C1[0]:{MWP1[0]:C1_MWP1,MWP2[0]:C1_MWP2,MWP3[0]:C1_MWP3,C2[0]:C1_C2,C3[0]:C1_C3,C4[0]:C1_C4,C5[0]:C1_C5,C6[0]:C1_C6},C2[0]:{MWP1[0]:C2_MWP1,MWP2[0]:C2_MWP2,MWP3[0]:C2_MWP3,C1[0]:C1_C2,C3[0]:C2_C3,C4[0]:C2_C4,C5[0]:C2_C5,C6[0]:C2_C6},
                     C3[0]:{MWP1[0]:C3_MWP1,MWP2[0]:C3_MWP2,MWP3[0]:C3_MWP3,C1[0]:C1_C3,C2[0]:C2_C3,C4[0]:C3_C4,C5[0]:C3_C5,C6[0]:C3_C6},C4[0]:{MWP1[0]:C4_MWP1,MWP2[0]:C4_MWP2,MWP3[0]:C4_MWP3,C1[0]:C1_C4,C2[0]:C2_C4,C3[0]:C3_C4,C5[0]:C4_C5,C6[0]:C4_C6},
@@ -154,5 +153,6 @@ def server_cb(req):
 
 rp.init_node('waypoint_optimization')
 rp.Subscriber('local_pos_ref', Transform, pos_cb)
+rp.wait_for_message('local_pos_ref', Transform) # blocks until a message is received (here to make sure we have pose feedback)
 s = rp.Service('path_service', Path, server_cb)
 rp.spin()

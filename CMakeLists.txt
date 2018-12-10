@@ -10,6 +10,7 @@ project(agv_as18)
 find_package(catkin REQUIRED COMPONENTS
   rospy
   message_generation
+  tf
 )
 
 ## System dependencies are found with CMake's conventions
@@ -49,8 +50,6 @@ find_package(catkin REQUIRED COMPONENTS
 add_message_files(
   FILES
   Motor.msg
-  Waypoints.msg
-  Task.msg
   Reference.msg
   Faulty.msg
 )
