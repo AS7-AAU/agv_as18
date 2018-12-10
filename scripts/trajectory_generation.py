@@ -45,14 +45,14 @@ while not rp.is_shutdown():
     else:
       v = max_speed
       if len(target) == 2:
-        if u_mag <= 25 and u_mag > 10:
+        if u_mag <= 25 and u_mag > 3:
           v *= u_mag/50
-        elif u_mag <= 10:
+        elif u_mag <= 3:
           v *= 0.0
           phi_e *= 0.0
           target=[]
           pub_target.publish(True) # request new target list from task_tracking node
-      elif u_mag <= 10:
+      elif u_mag <= 3:
         del target[0]
         del target[0]
     
