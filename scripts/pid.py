@@ -1,133 +1,100 @@
-#!/usr/bin/env python
-import rospy as rp
-import math 
-from std_msgs.msg import Float32
-from agv_as18.msg import Motor, Reference
+#!/usr/bin/python
+import time
 
 class PID:
-	"""
-	Discrete PID control
-	"""
+    """PID Controller
+    """
 
-	def __init__(self, P=1.0, I=0.1, D=0.0, Derivator=0.0, Integrator=0.0, Integrator_max=500, Integrator_min=-500, set_point=0.0):
-		self.Kp=P
-		self.Ki=I
-		self.Kd=D
-		self.Derivator=Derivator
-		self.Integrator=Integrator
-		self.Integrator_max=Integrator_max
-		self.Integrator_min=Integrator_min
-		self.set_point=set_point
-		self.error=0.0
+    def __init__(self, P=0.2, I=0.0, D=0.0):
 
-	def update(self, process_value):
-		"""
-		Calculate PID output value for given reference input and feedback
-		"""
-		self.error = self.set_point - process_value
-		self.P_value = self.Kp * self.error
-		self.D_value = self.Kd * ( self.error - self.Derivator)
-		self.Derivator = self.error
-		self.Integrator = self.Integrator + self.error
+        self.Kp = P
+        self.Ki = I
+        self.Kd = D
 
-		if self.Integrator > self.Integrator_max:
-			self.Integrator = self.Integrator_max
-		elif self.Integrator < self.Integrator_min:
-			self.Integrator = self.Integrator_min
-		self.I_value = self.Integrator * self.Ki
+        self.sample_time = 0.00
+        self.current_time = time.time()
+        self.last_time = self.current_time
 
-		PID = self.P_value + self.I_value + self.D_value
-		return PID
+        self.clear()
 
-	def setPoint(self, set_point):
-		"""
-		Initilize the setpoint of PID
-		"""
-		self.set_point = set_point
-		self.Integrator=0
-		self.Derivator=0
+    def clear(self):
+        """Clears PID computations and coefficients"""
+        self.SetPoint = 0.0
 
-	def setIntegrator(self, Integrator):
-		self.Integrator = Integrator
+        self.PTerm = 0.0
+        self.ITerm = 0.0
+        self.DTerm = 0.0
+        self.last_error = 0.0
 
-	def setDerivator(self, Derivator):
-		self.Derivator = Derivator
+        # Windup Guard
+        self.int_error = 0.0
+        self.windup_guard = 20.0
 
-	def setKp(self, P):
-		self.Kp = P
+        self.output = 0.0
 
-	def setKi(self, I):
-		self.Ki = I
+    def update(self, feedback_value):
+        """Calculates PID value for given reference feedback
 
-	def setKd(self,D):
-		self.Kd = D
+        .. math::
+            u(t) = K_p e(t) + K_i \int_{0}^{t} e(t)dt + K_d {de}/{dt}
 
-	def getPoint(self):
-		return self.set_point
+        .. figure:: images/pid_1.png
+           :align:   center
 
-	def getError(self):
-		return self.error
+           Test PID with Kp=1.2, Ki=1, Kd=0.001 (test_pid.py)
 
-	def getIntegrator(self):
-		return self.Integrator
+        """
+        error = self.SetPoint - feedback_value
 
-	def getDerivator(self):
-		return self.Derivator
+        self.current_time = time.time()
+        delta_time = self.current_time - self.last_time
+        delta_error = error - self.last_error
 
-## Get messages ##
-enc_r = 0.0
-enc_l = 0.0
-omega_a=0.0
-omega_b=0.0
+        if (delta_time >= self.sample_time):
+            self.PTerm = self.Kp * error
+            self.ITerm += error * delta_time
 
-def encoder_left(enc_left):
-	global enc_l
-	enc_l = enc_left.data
+            if (self.ITerm < -self.windup_guard):
+                self.ITerm = -self.windup_guard
+            elif (self.ITerm > self.windup_guard):
+                self.ITerm = self.windup_guard
 
-def encoder_right(enc_right):
-	global enc_r
-	enc_r = enc_right.data
+            self.DTerm = 0.0
+            if delta_time > 0:
+                self.DTerm = delta_error / delta_time
 
-def cmd_vel_cb(data):
-	global omega_a
-	global omega_b
-	omega_a = float(data.v)
-	omega_b = float(data.omega)
+            # Remember last time and last error for next calculation
+            self.last_time = self.current_time
+            self.last_error = error
 
-def saturate(signal):
-	if signal > 54:
-		return 54
-	elif signal < -54:
-		return -54
-	return signal
+            self.output = self.PTerm + (self.Ki * self.ITerm) + (self.Kd * self.DTerm)
 
-if __name__=="__main__":	
-	rp.init_node("pid")
-	rp.Subscriber("encoder_signal_left", Float32, encoder_left)	
-	rp.Subscriber("encoder_signal_right", Float32, encoder_right)
-	rp.Subscriber("cmd_vel", Reference, cmd_vel_cb)
-	pub = rp.Publisher("motor_signal", Motor, queue_size=1)
-	
-	try:
-		controller_right = PID()
-		controller_left = PID()
-		while not rp.is_shutdown():
-			if controller_right.getPoint() != omega_a:
-				controller_right.setPoint(omega_a)
-			pid_r = controller_right.update(enc_r)
-				
-			if controller_left.getPoint() != omega_b:
-				controller_left.setPoint(omega_b)
-			pid_l = controller_left.update(-enc_l)
-				
-			# Saturated the signal
-			# pid_r = saturate(pid_r)
-			# pid_l = saturate(pid_l)
-			# TODO: Do we have to saturate the signal for the PID as well? if not then only saturate what we send
+    def setKp(self, proportional_gain):
+        """Determines how aggressively the PID reacts to the current error with setting Proportional Gain"""
+        self.Kp = proportional_gain
 
-			# use only one of these publishers at a time; the second is without the PID
-			# pub.publish(saturate(pid_r), saturate(pid_l))
-			pub.publish(saturate(omega_a), saturate(omega_b))
-			 
-	except rp.ROSInterruptException:
-		destroy()
+    def setKi(self, integral_gain):
+        """Determines how aggressively the PID reacts to the current error with setting Integral Gain"""
+        self.Ki = integral_gain
+
+    def setKd(self, derivative_gain):
+        """Determines how aggressively the PID reacts to the current error with setting Derivative Gain"""
+        self.Kd = derivative_gain
+
+    def setWindup(self, windup):
+        """Integral windup, also known as integrator windup or reset windup,
+        refers to the situation in a PID feedback controller where
+        a large change in setpoint occurs (say a positive change)
+        and the integral terms accumulates a significant error
+        during the rise (windup), thus overshooting and continuing
+        to increase as this accumulated error is unwound
+        (offset by errors in the other direction).
+        The specific problem is the excess overshooting.
+        """
+        self.windup_guard = windup
+
+    def setSampleTime(self, sample_time):
+        """PID that should be updated at a regular interval.
+        Based on a pre-determined sampe time, the PID decides if it should compute or return immediately.
+        """
+        self.sample_time = sample_time
