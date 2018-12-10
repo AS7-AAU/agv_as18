@@ -6,7 +6,7 @@ from agv_as18.msg import Reference
 from math import sin, cos, pi, sqrt, atan2
 
 beast=[0.0,0.0,-pi/2]
-target=[]
+target=[100.0, 0.0]
 max_speed = 80
 R = 2
 L = 12.5
@@ -58,7 +58,7 @@ while not rp.is_shutdown():
     
     omega_A = (2*v + phi_e * L)/(2*R)
     omega_B = (2*v - phi_e * L)/(2*R)
-    #print(v, phi_e)
+    print(v, phi_e)
     #print(omega_A, omega_B)
     pub.publish(Reference(v, phi_e))
     pub_cmd_vel.publish(Reference(omega_A, omega_B))

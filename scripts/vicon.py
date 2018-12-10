@@ -17,7 +17,9 @@ def cb(data):
     eul = list(tf.transformations.euler_from_quaternion(rotation))
     # rp.loginfo(degrees(eul[2]))
     msg = Transform()
-    msg.translation = data.transform.translation
+    msg.translation.x = data.transform.translation.x*100
+    msg.translation.y = data.transform.translation.y*100
+    msg.translation.z = data.transform.translation.z*100
     msg.rotation.z = eul[2]
     pub.publish(msg)
 
