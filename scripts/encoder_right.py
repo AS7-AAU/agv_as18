@@ -33,8 +33,8 @@ try:
             trav += counter*0.01395
             # print omega
             counter = 0
+            pub.publish(omega)
         clkLastState = clkState
-        pub.publish(omega)
         # sleep(0.01)
 finally:
     GPIO.cleanup()
