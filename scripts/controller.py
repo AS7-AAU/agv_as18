@@ -9,6 +9,7 @@ P=1.0
 I=0.0
 D=0.0
 freq=100.0
+max_ang_vel=24.5
 
 def encoder_left(enc_left):
     global controller_left
@@ -25,10 +26,10 @@ def cmd_vel_cb(data):
     controller_right.SetPoint = data.v
 
 def saturate(signal):
-	if signal > 54:
-		return 54
-	elif signal < -54:
-		return -54
+	if signal > max_ang_vel:
+		return max_ang_vel
+	elif signal < -max_ang_vel:
+		return -max_ang_vel
 	return signal
 
 rp.init_node("pid")

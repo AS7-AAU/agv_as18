@@ -1,5 +1,7 @@
 from RPi import GPIO
-from time import sleep, time
+from time import time
+import rospy as rp
+from std_msgs.msg import Float32
 
 clk = 13
 dt = 6
@@ -13,22 +15,25 @@ trav = 0.0
 clkLastState = GPIO.input(clk)
 
 try:
-        ta = time()
-        while True:
-                clkState = GPIO.input(clk)
-                dtState = GPIO.input(dt)
-                if clkState != clkLastState:
-                        if dtState != clkState:
-                                counter += 1
-                        else:
-                                counter -= 1
-                        rad = (counter/900.0)*6.28
-                        omega = rad/(time()-ta)
-                        ta = time()
-                        trav += counter*0.01395
-                        print omega
-                        counter = 0
-                clkLastState = clkState
-                #sleep(0.01)
+    rp.init_node('encoder_left')
+    pub = rp.Publisher('encoder_signal_left', Float32, queue_size=1)
+    ta = time()
+    while not rp.is_shutdown():
+        clkState = GPIO.input(clk)
+        dtState = GPIO.input(dt)
+        if clkState != clkLastState:
+            if dtState != clkState:
+                counter += 1
+            else:
+                counter -= 1
+            rad = (counter/900.0)*6.28
+            omega = rad/(time()-ta)
+            ta = time()
+            trav += counter*0.01395
+            # print omega
+            counter = 0
+        clkLastState = clkState
+        pub.publish(omega)
+        # sleep(0.01)
 finally:
-        GPIO.cleanup()
+    GPIO.cleanup()
