@@ -48,13 +48,14 @@ def encoder_signal_cb():
 
 	while not rospy.is_shutdown():
 		rotaryDeal()
-		if time.time() - timer_a >0.0052:
+		time_diff = time.time() - timer_a
+		if time_diff >0.0052:
 			timer_a = time.time()
 			enc_a = (globalCounter * 74.2837) # Encoder value in RPM
 			enc_a = enc_a * (2*math.pi/60) # Encoder value in angular velocity per sec	
 			globalCounter =0
 
-			print("Encoder left value", enc_a)
+			print("Encoder left value", enc_a, time_diff)
 			pub.publish(enc_a)
 
 def destroy():

@@ -10,8 +10,8 @@ def cb(data):
 
     if dist < 1.0:
         msg = motor()
-        msg.a = 10.0
-        msg.b = 10.0
+        msg.a = 0.0
+        msg.b = 27.0
         pub.publish(msg)
 
 rp.init_node('testnode')

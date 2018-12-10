@@ -11,12 +11,16 @@ D=0.0
 freq=100.0
 
 def encoder_left(enc_left):
-    controller_left.update(enc_left)
+    global controller_left
+    controller_left.update(enc_left.data)
 
 def encoder_right(enc_right):
-    controller_right.update(enc_right)
+    global controller_right
+    controller_right.update(enc_right.data)
 
 def cmd_vel_cb(data):
+    global controller_left
+    global controller_right
     controller_left.SetPoint = data.omega
     controller_right.SetPoint = data.v
 
