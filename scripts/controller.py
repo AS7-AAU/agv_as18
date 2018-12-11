@@ -5,7 +5,7 @@ import rospy as rp
 from std_msgs.msg import Float32
 from agv_as18.msg import Motor, Reference
 
-P=1.0
+P=5.0
 I=0.0
 D=0.0
 freq=100.0
@@ -27,11 +27,11 @@ def cmd_vel_cb(data):
 
 def saturate(signal):
 	if signal > max_ang_vel:
+		return max_ang_vel
 	elif signal < -max_ang_vel:
 		return -max_ang_vel
-		return max_ang_vel
 	return signal
-    
+
 controller_left = PID.PID(P,I,D)
 controller_right = PID.PID(P,I,D)
 
