@@ -35,7 +35,7 @@ def saturate(signal):
 controller_left = PID.PID(P,I,D)
 controller_right = PID.PID(P,I,D)
 
-controller_left.SetPoint = 0.0
+controller_left.SetPoint = 20.0
 controller_left.setSampleTime(1.0/freq)
 controller_right.SetPoint = 0.0
 controller_right.setSampleTime(1.0/freq)
