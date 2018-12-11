@@ -7,7 +7,7 @@ from math import sin, cos, pi, sqrt, atan2
 
 beast=[0.0,0.0,-pi/2]
 target=[]
-max_ang_vel=24.5
+max_ang_vel=25.0
 phi_threshold = 0.3
 R = 2
 L = 12.5

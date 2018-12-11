@@ -9,7 +9,7 @@ P=10.0
 I=0.0
 D=0.0
 freq=100.0
-max_ang_vel=24.5
+max_ang_vel=25.0
 
 def encoder_left(enc_left):
     global controller_left

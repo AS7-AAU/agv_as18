@@ -4,7 +4,7 @@ from agv_as18.msg import Motor as motor
 
 import sys, select, termios, tty
 
-max_ang_vel = 24.5
+max_ang_vel = 25.0
 
 msg = """
 Reading from the keyboard  and Publishing to Twist!
