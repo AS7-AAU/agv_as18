@@ -7,9 +7,12 @@ from math import sin, cos, pi, sqrt, atan2
 
 beast=[0.0,0.0,-pi/2]
 target=[]
-max_speed = 45.25
+max_ang_vel=24.5
+phi_threshold = 0.3
 R = 2
 L = 12.5
+max_speed = (max_ang_vel * 2.0 * R - phi_threshold * L) / 2.0
+
 
 def pos_ref_cb(data):
   global beast
@@ -40,13 +43,13 @@ while not rp.is_shutdown():
     e = phi_d - beast[2] # difference between desired and current heading
     phi_e = atan2(sin(e),cos(e)) # 4-quadrant angle of e
 
-    if abs(phi_e) > 0.3:
+    if abs(phi_e) > phi_threshold:
       v = 0
     else:
       v = max_speed
       if len(target) == 2:
         if u_mag <= 25 and u_mag > 3:
-          v *= u_mag/50
+          v *= u_mag/40
         elif u_mag <= 3:
           v *= 0.0
           phi_e *= 0.0
