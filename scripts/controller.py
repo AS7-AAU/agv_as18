@@ -7,7 +7,7 @@ from agv_as18.msg import Motor, Reference
 
 P=5.0
 I=0.0
-D=0.0
+D=1.0
 freq=100.0
 max_ang_vel=24.5
 
