@@ -27,10 +27,18 @@ def cmd_vel_cb(data):
 
 def saturate(signal):
 	if signal > max_ang_vel:
-		return max_ang_vel
 	elif signal < -max_ang_vel:
 		return -max_ang_vel
+		return max_ang_vel
 	return signal
+    
+controller_left = PID.PID(P,I,D)
+controller_right = PID.PID(P,I,D)
+
+controller_left.SetPoint = 0.0
+controller_left.setSampleTime(1.0/freq)
+controller_right.SetPoint = 0.0
+controller_right.setSampleTime(1.0/freq)
 
 rp.init_node("pid")
 rp.Subscriber("encoder_signal_left", Float32, encoder_left)	
@@ -39,13 +47,6 @@ rp.Subscriber("cmd_vel", Reference, cmd_vel_cb)
 pub = rp.Publisher("motor_signal", Motor, queue_size=1)
 rate = rp.Rate(freq)
 
-controller_left = PID.PID(P,I,D)
-controller_right = PID.PID(P,I,D)
-
-controller_left.SetPoint = 0.0
-controller_left.setSampleTime(1.0/freq)
-controller_right.SetPoint = 0.0
-controller_right.setSampleTime(1.0/freq)
 
 while not rp.is_shutdown():
     pub.publish(saturate(controller_right.output), saturate(controller_left.output))
