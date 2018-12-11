@@ -22,6 +22,7 @@ try:
     while not rp.is_shutdown():
         clkState = GPIO.input(clk)
         dtState = GPIO.input(dt)
+        omega=0.0
         if clkState != clkLastState:
             if dtState != clkState:
                 counter += 1
@@ -33,7 +34,7 @@ try:
             trav += counter*0.01395
             # print omega
             counter = 0
-            pub.publish(omega)
+        pub.publish(omega)
         clkLastState = clkState
         # sleep(0.01)
 finally:
