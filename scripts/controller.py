@@ -5,10 +5,10 @@ import rospy as rp
 from std_msgs.msg import Float32
 from agv_as18.msg import Motor, Reference
 
-P=10.0
+P=1.0
 I=0.0
 D=0.0
-freq=100.0
+freq=180.0
 max_ang_vel=25.0
 
 def encoder_left(enc_left):
