@@ -11,7 +11,7 @@ counter = 0
 trav = 0.0
 omega=0.0
 last_omega=omega
-rate = 1/200
+rate = 1.0/200.0
 
 GPIO.setmode(GPIO.BCM)
 GPIO.setup(clk, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
