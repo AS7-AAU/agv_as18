@@ -45,7 +45,7 @@ while not rp.is_shutdown():
 
     if abs(phi_e) > phi_threshold:
       v = 0
-      phi_e *= 2.5
+      # phi_e *= 2.5
     else:
       v = max_speed
       if len(target) == 2:

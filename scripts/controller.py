@@ -5,7 +5,7 @@ import rospy as rp
 from std_msgs.msg import Float32
 from agv_as18.msg import Motor, Reference
 
-P=0.005
+P=0.006
 I=0.0
 D=0.0
 freq=180.0
