@@ -16,19 +16,19 @@ omega_b=0.0
 
 def encoder_left(enc_left):
     global controller_left
-    global omega_b
     controller_left.update(enc_left.data)
-    omega_b=enc_left.data
 
 def encoder_right(enc_right):
     global controller_right
-    global omega_a
     controller_right.update(enc_right.data)
-    omega_a=enc_right.data
 
 def cmd_vel_cb(data):
     global controller_left
     global controller_right
+    global omega_a
+    global omega_b
+    omega_a=data.v
+    omega_b=data.omega
     controller_left.SetPoint = data.omega
     controller_right.SetPoint = data.v
 
