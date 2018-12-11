@@ -37,7 +37,7 @@ while not rp.is_shutdown():
         omega = -rad/elapsed
         ta = time()
         # trav += counter*0.01395
-        print(omega)
+        # print(omega)
         counter = 0
         pub.publish(omega)
             
