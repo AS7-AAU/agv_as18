@@ -28,7 +28,7 @@ try:
             else:
                 counter -= 1
             rad = (counter/900.0)*6.28
-            omega = rad/(time()-ta)
+            omega = -rad/(time()-ta)
             ta = time()
             trav += counter*0.01395
             # print omega
