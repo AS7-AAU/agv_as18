@@ -9,7 +9,6 @@ clk = 13
 dt = 6
 counter = 0
 trav = 0.0
-clkLastState = GPIO.input(clk)
 omega=0.0
 last_omega=omega
 rate = 1/200
@@ -21,6 +20,7 @@ GPIO.setup(dt, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 rp.init_node('encoder_left')
 pub = rp.Publisher('encoder_signal_left', Float32, queue_size=1)
 
+clkLastState = GPIO.input(clk)
 ta = time()
 while not rp.is_shutdown():
     clkState = GPIO.input(clk)
