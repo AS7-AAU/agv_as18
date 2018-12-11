@@ -7,7 +7,7 @@ from math import sin, cos, pi, sqrt, atan2
 
 beast=[0.0,0.0,-pi/2]
 target=[]
-max_speed = 106
+max_speed = 47.75
 R = 2
 L = 12.5
 
