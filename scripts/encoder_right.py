@@ -3,6 +3,7 @@ from RPi import GPIO
 from time import time
 from math import pi
 import rospy as rp
+import moving_avg as MA
 from std_msgs.msg import Float32
 
 clk = 12
@@ -16,6 +17,8 @@ rate = 1.0/200.0
 GPIO.setmode(GPIO.BCM)
 GPIO.setup(clk, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 GPIO.setup(dt, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+
+filt = MA.MovingAverageFilter(n=50)
 
 rp.init_node('encoder_right')
 pub = rp.Publisher('encoder_signal_right', Float32, queue_size=1)
@@ -35,11 +38,12 @@ while not rp.is_shutdown():
     else:
         rad = (counter/900.0)*2*pi
         omega = -rad/elapsed
+        omega_avg = filt(omega)
         ta = time()
         # trav += counter*0.01395
         # print(omega)
         counter = 0
-        pub.publish(omega)
+        pub.publish(omega_avg)
             
     clkLastState = clkState
 

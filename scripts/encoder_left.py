@@ -18,7 +18,7 @@ GPIO.setmode(GPIO.BCM)
 GPIO.setup(clk, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 GPIO.setup(dt, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 
-filt = MA.MovingAverageFilter(n=5)
+filt = MA.MovingAverageFilter(n=50)
 
 rp.init_node('encoder_left')
 pub = rp.Publisher('encoder_signal_left', Float32, queue_size=1)
