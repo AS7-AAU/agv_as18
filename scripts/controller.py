@@ -40,7 +40,7 @@ def saturate(signal):
 		return -max_ang_vel
 	return signal
 def threshold(signal):
-    if (signal > -threshold_val)and(signal < threshold_val):
+    if (signal > -threshold_val)and(signal < threshold_val)and((data.omega == 0)or(data.v == 0)):
         return 0
     return signal
 
