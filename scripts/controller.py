@@ -60,5 +60,5 @@ rate = rp.Rate(freq)
 while not rp.is_shutdown():
     omega_a += controller_right.output
     omega_b += controller_left.output
-    pub.publish(saturate(omega_a,controller_right.output), saturate(omega_b,controller_left.output))
+    pub.publish(saturate(omega_a,controller_right.SetPoint), saturate(omega_b,controller_left.SetPoint))
     rate.sleep()
