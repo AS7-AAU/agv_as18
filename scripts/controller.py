@@ -10,7 +10,7 @@ I=0.0
 D=0.0
 freq=180.0
 max_ang_vel=22.0
-threshold= 0.5
+threshold_val= 0.5
 
 omega_a=0.0
 omega_b=0.0
@@ -40,7 +40,7 @@ def saturate(signal):
 		return -max_ang_vel
 	return signal
 def threshold(signal):
-    if (signal > -threshold)&&(signal < threshold):
+    if (signal > -threshold_val)and(signal < threshold_val):
         return 0
     return signal
 
