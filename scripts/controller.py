@@ -10,6 +10,7 @@ I=0.0
 D=0.0
 freq=180.0
 max_ang_vel=22.0
+threshold= 0.5
 
 omega_a=0.0
 omega_b=0.0
@@ -38,6 +39,10 @@ def saturate(signal):
 	elif signal < -max_ang_vel:
 		return -max_ang_vel
 	return signal
+def threshold(signal):
+    if (signal > -threshold)&&(signal < threshold):
+        return 0
+    return signal
 
 controller_left = PID.PID(P,I,D)
 controller_right = PID.PID(P,I,D)
@@ -57,5 +62,7 @@ rate = rp.Rate(freq)
 while not rp.is_shutdown():
     omega_a += controller_right.output
     omega_b += controller_left.output
+    omega_a = threshold(omega_a)
+    omega_b = threshold(omega_b)
     pub.publish(saturate(omega_a), saturate(omega_b))
     rate.sleep()
