@@ -10,7 +10,7 @@ I=0.0
 D=0.0
 freq=180.0
 max_ang_vel=22.0
-threshold_val= 0.5
+threshold= 0.5
 
 omega_a=0.0
 omega_b=0.0
@@ -33,20 +33,13 @@ def cmd_vel_cb(data):
     controller_left.SetPoint = data.omega
     controller_right.SetPoint = data.v
 
-def saturate(signal):
+def saturate(signal, setpoint):
 	if signal > max_ang_vel:
 		return max_ang_vel
 	elif signal < -max_ang_vel:
 		return -max_ang_vel
-	return signal
-def threshold_a(signal):
-    if signal > -threshold_val and signal < threshold_val and controller_right.SetPoint == 0:
-        return 0
-    return signal
-
-def threshold_b(signal):
-    if signal > -threshold_val and signal < threshold_val and controller_left.SetPoint == 0 :
-        return 0
+    elif signal > -threshold and signal < threshold and setpoint == 0:
+        return 0.0
     return signal
 
 controller_left = PID.PID(P,I,D)
@@ -67,7 +60,5 @@ rate = rp.Rate(freq)
 while not rp.is_shutdown():
     omega_a += controller_right.output
     omega_b += controller_left.output
-    omega_a = threshold_a(omega_a)
-    omega_b = threshold_b(omega_b)
-    pub.publish(saturate(omega_a), saturate(omega_b))
+    pub.publish(saturate(omega_a,controller_right.output), saturate(omega_b,controller_left.output))
     rate.sleep()

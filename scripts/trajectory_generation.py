@@ -8,11 +8,22 @@ from math import sin, cos, pi, sqrt, atan2
 beast=[0.0,0.0,-pi/2]
 target=[]
 max_ang_vel=22.0
-phi_threshold = 0.2
+phi_threshold = 0.1
 R = 2
 L = 12.5
 max_speed = (max_ang_vel * 2.0 * R - phi_threshold * L) / 2.0
+Kp = max_ang_vel/9.8175
 
+def translate(value, leftMin, leftMax, rightMin, rightMax):
+    # Figure out how 'wide' each range is
+    leftSpan = leftMax - leftMin
+    rightSpan = rightMax - rightMin
+
+    # Convert the left range into a 0-1 range (float)
+    valueScaled = float(value - leftMin) / float(leftSpan)
+
+    # Convert the 0-1 range into a value in the right range.
+    return rightMin + (valueScaled * rightSpan)
 
 def pos_ref_cb(data):
   global beast
@@ -45,12 +56,12 @@ while not rp.is_shutdown():
 
     if abs(phi_e) > phi_threshold:
       v = 0
-      # phi_e *= 2.5
+      phi_e *= Kp
     else:
       v = max_speed
       if len(target) == 2:
         if u_mag <= 25 and u_mag > 3:
-          v *= u_mag/40
+          v *= translate(u_mag,3,25,0.4,1.0)
         elif u_mag <= 3:
           v *= 0.0
           phi_e *= 0.0
@@ -64,5 +75,5 @@ while not rp.is_shutdown():
     omega_B = (2*v - phi_e * L)/(2*R)
     #print(v, phi_e)
     #print(omega_A, omega_B)
-    pub.publish(Reference(v, phi_e))
+    # pub.publish(Reference(v, phi_e))
     pub_cmd_vel.publish(Reference(omega_A, omega_B))
