@@ -9,7 +9,7 @@ P=0.006
 I=0.0
 D=0.0
 freq=180.0
-max_ang_vel=25.0
+max_ang_vel=22.0
 
 omega_a=0.0
 omega_b=0.0
