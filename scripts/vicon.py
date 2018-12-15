@@ -23,7 +23,7 @@ def cb(data):
     msg.rotation.z = eul[2]
     pub.publish(msg)
 
-rp.init_node('vicon_test')
+rp.init_node('vicon_agv')
 rp.Subscriber('vicon/AS1/AS1', TransformStamped, cb)
 pub = rp.Publisher('local_pos_ref', Transform, queue_size=1, latch=True)
 rp.spin()
