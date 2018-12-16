@@ -5,10 +5,10 @@ import rospy as rp
 from std_msgs.msg import Float32
 from agv_as18.msg import Motor, Reference
 
-P=0.006
-I=0.0
-D=0.0
-freq=180.0
+P=0.005
+I=0.0001
+D=0.0004
+freq=200.0
 max_ang_vel=22.0
 threshold= 0.5
 
