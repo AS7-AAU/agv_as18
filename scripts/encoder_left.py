@@ -1,71 +1,50 @@
 #!/usr/bin/env python
-
-import RPi.GPIO as GPIO
-import time
-import rospy
+from RPi import GPIO
+from time import time
+from math import pi
+import rospy as rp
+import moving_avg as MA
 from std_msgs.msg import Float32
-import math
 
-Left_RotateAPin = 13 # Define as CLK Pin
-Left_RotateBPin = 6 # Define as DT Pin
+clk = 13
+dt = 6
+counter = 0
+trav = 0.0
+omega=0.0
+last_omega=omega
+rate = 1.0/200.0
 
-Permiter = 0.028
-globalCounter = 0
-flag = 0
-Last_RoB_Status = 0
-Current_RoB_Status = 0
+GPIO.setmode(GPIO.BCM)
+GPIO.setup(clk, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+GPIO.setup(dt, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 
-def setup():
-	GPIO.setmode(GPIO.BCM)
-	GPIO.setup([Left_RotateAPin,Left_RotateBPin], GPIO.IN)
+filt = MA.MovingAverageFilter(n=50)
 
-def rotaryDeal():
-	global flag
-	global Last_RoB_Status
-	global Current_RoB_Status
-	global globalCounter
+rp.init_node('encoder_left')
+pub = rp.Publisher('encoder_signal_left', Float32, queue_size=1)
 
-	Last_RoB_Status = GPIO.input(Left_RotateBPin)
+clkLastState = GPIO.input(clk)
+ta = time()
+while not rp.is_shutdown():
+    clkState = GPIO.input(clk)
+    dtState = GPIO.input(dt)
+    elapsed = time() - ta
+    if elapsed < rate:
+        if clkState != clkLastState:
+            if dtState != clkState:
+                counter += 1
+            else:
+                counter -= 1
+    else:
+        rad = (counter/900.0)*2*pi
+        omega = rad/elapsed
+        omega_avg = filt(omega)
+        ta = time()
+        # trav += counter*0.01395
+        # print(omega_avg)
+        counter = 0
+        pub.publish(omega_avg)
+            
+    clkLastState = clkState
 
-	while (not GPIO.input(Left_RotateAPin)):
-		Current_RoB_Status = GPIO.input(Left_RotateBPin)
-		flag = 1
-
-	if flag == 1:
-		flag = 0
-		if (Last_RoB_Status == 0) and (Current_RoB_Status == 1):
-			globalCounter = globalCounter + 1
-		if (Last_RoB_Status == 1) and (Current_RoB_Status == 0):
-			globalCounter = globalCounter - 1
-
-def btnISR(channel):
-	global globalCounter
-	globalCounter = 0
-
-def encoder_signal_cb():
-	global globalCounter
-	timer_a = time.time()
-
-	while not rospy.is_shutdown():
-		rotaryDeal()
-		if time.time() - timer_a >0.0052:
-			timer_a = time.time()
-			enc_a = (globalCounter * 74.2837) # Encoder value in RPM
-			enc_a = enc_a * (2*math.pi/60) # Encoder value in angular velocity per sec	
-			globalCounter =0
-
-			print("Encoder left value", enc_a)
-			pub.publish(enc_a)
-
-def destroy():
-	GPIO.cleanup() # Release resource
-
-if __name__ == '__main__': # Program start from here
-	setup()
-	pub = rospy.Publisher('encoder_signal_left', Float32, queue_size = 1)
-	rospy.init_node('encoder_left')
-
-	try:
-		encoder_signal_cb()
-	except rospy.ROSInterruptException: # When 'Ctrl+C' is pressed, the child program destroy() will be executed.
-		destroy()
+GPIO.cleanup([6,13])

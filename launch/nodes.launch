@@ -7,6 +7,6 @@
   <node name="encoder_left" pkg="agv_as18" type="encoder_left.py" output="screen"/>
   <node name="encoder_right" pkg="agv_as18" type="encoder_right.py" output="screen"/>
   <node name="motor_driver" pkg="agv_as18" type="motor_driver.py" output="screen"/>
-  <node name="pid" pkg="agv_as18" type="pid.py" output="screen"/>
+  <node name="controller" pkg="agv_as18" type="controller.py" output="screen"/>
   <node name="vicon_agv" pkg="agv_as18" type="vicon.py" output="screen"/>
 </launch>
