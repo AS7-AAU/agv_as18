@@ -4,10 +4,14 @@ from geometry_msgs.msg import Transform
 from std_msgs.msg import Float32MultiArray, Bool
 from agv_as18.msg import Reference
 from math import sin, cos, pi, sqrt, atan2
+import serial
+
+ser = serial.Serial("/dev/ttyACM0",250000) #TODO: match baudrate with the one in the arduino code
+rp.sleep(2)
 
 beast=[0.0,0.0,-pi/2]
 target=[]
-max_ang_vel=22.0
+max_ang_vel=48.0
 phi_threshold = 0.1
 R = 2
 L = 12.5
@@ -77,3 +81,5 @@ while not rp.is_shutdown():
     #print(omega_A, omega_B)
     # pub.publish(Reference(v, phi_e))
     pub_cmd_vel.publish(Reference(omega_A, omega_B))
+    command = str(omega_A)+'&'+str(omega_B)
+    ser.write(command.encode()) # format is:  desired speed on motor A & desired speed on motor B

@@ -9,7 +9,7 @@ P=0.005
 I=0.0001
 D=0.0004
 freq=200.0
-max_ang_vel=22.0
+max_ang_vel=48.0
 threshold= 0.5
 
 omega_a=0.0

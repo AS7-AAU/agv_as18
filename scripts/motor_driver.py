@@ -3,7 +3,7 @@ import RPi.GPIO as gpio
 import rospy as rp
 from agv_as18.msg import Motor
 
-max_ang_vel = 22.0
+max_ang_vel = 48.0
 
 pins = {
     'AIN1' : 17,
