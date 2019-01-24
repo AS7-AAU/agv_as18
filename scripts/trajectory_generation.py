@@ -46,6 +46,7 @@ rp.Subscriber('nodes', Float32MultiArray, waypoints_cb)
 pub = rp.Publisher('control_reference', Reference, queue_size=1)
 pub_cmd_vel = rp.Publisher('cmd_vel', Reference, queue_size=1)
 pub_target=rp.Publisher('arrived_at_target', Bool, queue_size=1)
+rate = rp.Rate(100)
 
 while not rp.is_shutdown():
   #global target
@@ -83,3 +84,4 @@ while not rp.is_shutdown():
     pub_cmd_vel.publish(Reference(omega_A, omega_B))
     command = str(omega_A)+'&'+str(omega_B)
     ser.write(command.encode()) # format is:  desired speed on motor A & desired speed on motor B
+  rate.sleep()
