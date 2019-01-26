@@ -81,7 +81,7 @@ while not rp.is_shutdown():
         print(command)
         serial_send_command.write(command.encode())
     elif state == 4:
-      if abs(phi_e) > 0.15:
+      if abs(phi_e) > 0.2:
         state = 5
       elif u_mag <= 35:
         state = 6
@@ -94,9 +94,9 @@ while not rp.is_shutdown():
         print(command)
         serial_send_command.write(command.encode())
     elif state == 5:
-      serial_send_command.write('0&0'.encode())
+      # serial_send_command.write('0&0'.encode())
       state = 2
-      rp.sleep(0.1)
+      # rp.sleep(0.1)
     elif state == 6:
       v = max_speed
       omega = phi_e
