@@ -100,28 +100,31 @@ while not rp.is_shutdown():
     elif state == 6:
       v = max_speed
       omega = phi_e
-      if u_mag <= 35 and u_mag > 5:
-        v *= translate(u_mag,5,35,0.2,1.0)
-        omega_A = (2*v + omega * L)/(2*R)
-        omega_B = (2*v - omega * L)/(2*R)
-        command = str(omega_A)+'&'+str(omega_B)
-        print(command)
-        serial_send_command.write(command.encode())
-      elif u_mag <= 5:
-        if len(target) == 2:
-          target=[]
-          pub_target.publish(True) # request new target list from task_tracking node
-          serial_send_command.write('0&0'.encode())
-          state = 1
-          rp.sleep(0.1)
-        else:
-          del target[0]
-          del target[0]
-          # serial_send_command.write('0&0'.encode())
-          state = 1
-          # rp.sleep(0.1)
+      if abs(phi_e) > 0.2:
+        state = 5
       else:
-        state = 1
+        if u_mag <= 35 and u_mag > 5:
+          v *= translate(u_mag,5,35,0.2,1.0)
+          omega_A = (2*v + omega * L)/(2*R)
+          omega_B = (2*v - omega * L)/(2*R)
+          command = str(omega_A)+'&'+str(omega_B)
+          print(command)
+          serial_send_command.write(command.encode())
+        elif u_mag <= 5:
+          if len(target) == 2:
+            target=[]
+            pub_target.publish(True) # request new target list from task_tracking node
+            serial_send_command.write('0&0'.encode())
+            state = 1
+            rp.sleep(0.1)
+          else:
+            del target[0]
+            del target[0]
+            # serial_send_command.write('0&0'.encode())
+            state = 1
+            # rp.sleep(0.1)
+        else:
+          state = 1
 
     # if abs(phi_e) > phi_threshold:
     #   v = 0.0
