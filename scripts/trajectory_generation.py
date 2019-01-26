@@ -2,7 +2,6 @@
 import rospy as rp
 from geometry_msgs.msg import Transform
 from std_msgs.msg import Float32MultiArray, Bool
-from agv_as18.msg import Reference
 from math import sin, cos, pi, sqrt, atan2
 import serial
 
@@ -43,14 +42,10 @@ def waypoints_cb(data):
 rp.init_node('trajectory_generation')
 rp.Subscriber('local_pos_ref', Transform, pos_ref_cb)
 rp.Subscriber('nodes', Float32MultiArray, waypoints_cb)
-pub = rp.Publisher('control_reference', Reference, queue_size=1)
-pub_cmd_vel = rp.Publisher('cmd_vel', Reference, queue_size=1)
 pub_target=rp.Publisher('arrived_at_target', Bool, queue_size=1)
 rate = rp.Rate(100)
 
 while not rp.is_shutdown():
-  #global target
-  # print(target)
   if len(target) > 1:
     P = [target[0], target[1]] # target
     u = [P[0]-beast[0], P[1]-beast[1]] # vector from robot to target
@@ -78,10 +73,6 @@ while not rp.is_shutdown():
     
     omega_A = (2*v + phi_e * L)/(2*R)
     omega_B = (2*v - phi_e * L)/(2*R)
-    #print(v, phi_e)
-    #print(omega_A, omega_B)
-    # pub.publish(Reference(v, phi_e))
-    pub_cmd_vel.publish(Reference(omega_A, omega_B))
     command = str(omega_A)+'&'+str(omega_B)
     ser.write(command.encode()) # format is:  desired speed on motor A & desired speed on motor B
   rate.sleep()
