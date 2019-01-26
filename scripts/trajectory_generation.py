@@ -104,17 +104,17 @@ while not rp.is_shutdown():
         omega *= translate(abs(phi_e),phi_threshold,0.5,0.2,1.0)
     else:
       v = max_speed
-      if len(target) == 2:
-        if u_mag <= 35 and u_mag > 5:
-          v *= translate(u_mag,5,35,0.2,1.0)
-        elif u_mag <= 5:
-          v *= 0.0
-          omega *= 0.0
+      if u_mag <= 35 and u_mag > 5:
+        v *= translate(u_mag,5,35,0.2,1.0)
+      elif u_mag <= 5:
+        v *= 0.0
+        omega *= 0.0
+        if len(target) == 2:
           target=[]
           pub_target.publish(True) # request new target list from task_tracking node
-      elif u_mag <= 5:
-        del target[0]
-        del target[0]
+        else:
+          del target[0]
+          del target[0]
     
     omega_A = (2*v + omega * L)/(2*R)
     omega_B = (2*v - omega * L)/(2*R)
