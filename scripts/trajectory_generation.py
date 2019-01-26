@@ -100,8 +100,8 @@ while not rp.is_shutdown():
     if abs(phi_e) > phi_threshold:
       v = 0.0
       omega = phi_e * Kp * pi / abs(phi_e)
-      if abs(phi_e) <= 0.5:
-        omega *= translate(abs(phi_e),phi_threshold,0.5,0.2,1.0)
+      if abs(phi_e) <= 1.0:
+        omega *= translate(abs(phi_e),phi_threshold,1.0,0.2,0.5)
     else:
       v = max_speed
       omega = phi_e
@@ -120,5 +120,6 @@ while not rp.is_shutdown():
     omega_A = (2*v + omega * L)/(2*R)
     omega_B = (2*v - omega * L)/(2*R)
     command = str(omega_A)+'&'+str(omega_B)
+    print(command)
     serial_send_command.write(command.encode()) # format is:  desired speed on motor A & desired speed on motor B
   rate.sleep()
