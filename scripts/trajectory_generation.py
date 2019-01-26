@@ -143,4 +143,5 @@ while not rp.is_shutdown():
     # command = str(omega_A)+'&'+str(omega_B)
     # print(command)
     # serial_send_command.write(command.encode()) # format is:  desired speed on motor A & desired speed on motor B
+  print(state)
   rate.sleep()
