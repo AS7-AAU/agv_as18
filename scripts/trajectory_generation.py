@@ -120,6 +120,8 @@ while not rp.is_shutdown():
           serial_send_command.write('0&0'.encode())
           state = 1
           rp.sleep(0.1)
+      else:
+        state = 1
 
     # if abs(phi_e) > phi_threshold:
     #   v = 0.0
