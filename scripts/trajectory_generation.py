@@ -12,7 +12,7 @@ phi_threshold = 0.07
 Kp = MAX_ANG_VEL/9.8175
 max_speed = (MAX_ANG_VEL * 2.0 * R - phi_threshold * L) / 2.0
 
-beast=[0.0,0.0,-pi/2]
+beast=[0.0,0.0,0.0]
 target=[]
 
 def translate(value, leftMin, leftMax, rightMin, rightMax):
@@ -29,7 +29,7 @@ def pos_ref_cb(data):
   global beast
   beast[0] = data.translation.x # x-coordinate
   beast[1] = data.translation.y # y-coordinate
-  beast[2] = data.rotation.z-pi/2 # heading
+  beast[2] = data.rotation.z # heading
 
 def waypoints_cb(data):
   global target
