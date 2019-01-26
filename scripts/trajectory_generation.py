@@ -74,7 +74,7 @@ while not rp.is_shutdown():
         state = 4
       else:
         v = 0
-        omega = phi_e * Kp * translate(abs(phi_e),phi_threshold,0.5,0.2,1.0)
+        omega = phi_e * Kp #* translate(abs(phi_e),phi_threshold,0.5,0.2,1.0)
         omega_A = (2*v + omega * L)/(2*R)
         omega_B = (2*v - omega * L)/(2*R)
         command = str(omega_A)+'&'+str(omega_B)
