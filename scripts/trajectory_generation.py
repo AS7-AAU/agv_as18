@@ -5,20 +5,17 @@ from std_msgs.msg import Float32MultiArray, Bool
 from math import sin, cos, pi, sqrt, atan2
 import serial
 
-ser = serial.Serial("/dev/ttyACM0",250000) #TODO: match baudrate with the one in the arduino code
-rp.sleep(2)
+MAX_ANG_VEL = 48.0
+R = 2
+L = 12.5
+phi_threshold = 0.07
+Kp = MAX_ANG_VEL/9.8175
+max_speed = (MAX_ANG_VEL * 2.0 * R - phi_threshold * L) / 2.0
 
 beast=[0.0,0.0,-pi/2]
 target=[]
-max_ang_vel=48.0
-phi_threshold = 0.1
-R = 2
-L = 12.5
-max_speed = (max_ang_vel * 2.0 * R - phi_threshold * L) / 2.0
-Kp = max_ang_vel/9.8175
 
 def translate(value, leftMin, leftMax, rightMin, rightMax):
-    # Figure out how 'wide' each range is
     leftSpan = leftMax - leftMin
     rightSpan = rightMax - rightMin
 
@@ -37,13 +34,15 @@ def pos_ref_cb(data):
 def waypoints_cb(data):
   global target
   target = list(data.data)
-  print(target)
+  # print(target)
 
 rp.init_node('trajectory_generation')
 rp.Subscriber('local_pos_ref', Transform, pos_ref_cb)
 rp.Subscriber('nodes', Float32MultiArray, waypoints_cb)
 pub_target=rp.Publisher('arrived_at_target', Bool, queue_size=1)
 rate = rp.Rate(100)
+serial_send_command = serial.Serial("/dev/ttyACM0",250000) #TODO: match baudrate with the one in the arduino code
+rp.sleep(2)
 
 while not rp.is_shutdown():
   if len(target) > 1:
@@ -57,22 +56,24 @@ while not rp.is_shutdown():
     if abs(phi_e) > phi_threshold:
       v = 0
       phi_e *= Kp
+      if abs(phi_e) < 0.5:
+        phi_e *= translate(abs(phi_e),phi_threshold,0.5,0.2,1.0)
     else:
       v = max_speed
       if len(target) == 2:
-        if u_mag <= 25 and u_mag > 3:
-          v *= translate(u_mag,3,25,0.4,1.0)
-        elif u_mag <= 3:
+        if u_mag <= 35 and u_mag > 5:
+          v *= translate(u_mag,5,25,0.2,1.0)
+        elif u_mag <= 5:
           v *= 0.0
           phi_e *= 0.0
           target=[]
           pub_target.publish(True) # request new target list from task_tracking node
-      elif u_mag <= 3:
+      elif u_mag <= 5:
         del target[0]
         del target[0]
     
     omega_A = (2*v + phi_e * L)/(2*R)
     omega_B = (2*v - phi_e * L)/(2*R)
     command = str(omega_A)+'&'+str(omega_B)
-    ser.write(command.encode()) # format is:  desired speed on motor A & desired speed on motor B
+    serial_send_command.write(command.encode()) # format is:  desired speed on motor A & desired speed on motor B
   rate.sleep()
