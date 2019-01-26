@@ -8,7 +8,7 @@ import serial
 MAX_ANG_VEL = 48.0
 R = 2.0
 L = 12.5
-phi_threshold = 0.15
+phi_threshold = 0.1
 Kp = MAX_ANG_VEL/9.8175
 max_speed = (MAX_ANG_VEL * 2.0 * R - phi_threshold * L) / 2.0
 
@@ -81,7 +81,7 @@ while not rp.is_shutdown():
         print(command)
         serial_send_command.write(command.encode())
     elif state == 4:
-      if abs(phi_e) > 0.3:
+      if abs(phi_e) > 0.2:
         state = 5
       elif u_mag <= 35:
         state = 6
