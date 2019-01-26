@@ -104,6 +104,7 @@ while not rp.is_shutdown():
         omega *= translate(abs(phi_e),phi_threshold,0.5,0.2,1.0)
     else:
       v = max_speed
+      omega = phi_e
       if u_mag <= 35 and u_mag > 5:
         v *= translate(u_mag,5,35,0.2,1.0)
       elif u_mag <= 5:
