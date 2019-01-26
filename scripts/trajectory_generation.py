@@ -58,7 +58,7 @@ while not rp.is_shutdown():
     global state
     if state == 1:
       state = 2
-    if state == 2:
+    elif state == 2:
       if abs(phi_e) <= 0.5:
         state = 3
       else:
@@ -69,7 +69,7 @@ while not rp.is_shutdown():
         command = str(omega_A)+'&'+str(omega_B)
         print(command)
         serial_send_command.write(command.encode())
-    if state == 3:
+    elif state == 3:
       if abs(phi_e) <= phi_threshold:
         state = 4
       else:
@@ -80,7 +80,7 @@ while not rp.is_shutdown():
         command = str(omega_A)+'&'+str(omega_B)
         print(command)
         serial_send_command.write(command.encode())
-    if state == 4:
+    elif state == 4:
       if abs(phi_e) > 0.15:
         state = 5
       elif u_mag <= 35:
@@ -93,11 +93,11 @@ while not rp.is_shutdown():
         command = str(omega_A)+'&'+str(omega_B)
         print(command)
         serial_send_command.write(command.encode())
-    if state == 5:
+    elif state == 5:
       serial_send_command.write('0&0'.encode())
       state = 2
       rp.sleep(0.1)
-    if state == 6:
+    elif state == 6:
       v = max_speed
       omega = phi_e
       if u_mag <= 35 and u_mag > 5:
