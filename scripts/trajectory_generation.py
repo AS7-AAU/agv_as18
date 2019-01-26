@@ -2,20 +2,20 @@
 import rospy as rp
 from geometry_msgs.msg import Transform
 from std_msgs.msg import Float32MultiArray, Bool
-from agv_as18.msg import Reference
 from math import sin, cos, pi, sqrt, atan2
+import serial
+
+MAX_ANG_VEL = 48.0
+R = 2
+L = 12.5
+phi_threshold = 0.07
+Kp = MAX_ANG_VEL/9.8175
+max_speed = (MAX_ANG_VEL * 2.0 * R - phi_threshold * L) / 2.0
 
 beast=[0.0,0.0,-pi/2]
 target=[]
-max_ang_vel=22.0
-phi_threshold = 0.1
-R = 2
-L = 12.5
-max_speed = (max_ang_vel * 2.0 * R - phi_threshold * L) / 2.0
-Kp = max_ang_vel/9.8175
 
 def translate(value, leftMin, leftMax, rightMin, rightMax):
-    # Figure out how 'wide' each range is
     leftSpan = leftMax - leftMin
     rightSpan = rightMax - rightMin
 
@@ -34,18 +34,17 @@ def pos_ref_cb(data):
 def waypoints_cb(data):
   global target
   target = list(data.data)
-  print(target)
+  # print(target)
 
 rp.init_node('trajectory_generation')
 rp.Subscriber('local_pos_ref', Transform, pos_ref_cb)
 rp.Subscriber('nodes', Float32MultiArray, waypoints_cb)
-pub = rp.Publisher('control_reference', Reference, queue_size=1)
-pub_cmd_vel = rp.Publisher('cmd_vel', Reference, queue_size=1)
 pub_target=rp.Publisher('arrived_at_target', Bool, queue_size=1)
+rate = rp.Rate(100)
+serial_send_command = serial.Serial("/dev/ttyACM0",250000) #TODO: match baudrate with the one in the arduino code
+rp.sleep(2)
 
 while not rp.is_shutdown():
-  #global target
-  # print(target)
   if len(target) > 1:
     P = [target[0], target[1]] # target
     u = [P[0]-beast[0], P[1]-beast[1]] # vector from robot to target
@@ -57,23 +56,24 @@ while not rp.is_shutdown():
     if abs(phi_e) > phi_threshold:
       v = 0
       phi_e *= Kp
+      if abs(phi_e) < 0.5:
+        phi_e *= translate(abs(phi_e),phi_threshold,0.5,0.2,1.0)
     else:
       v = max_speed
       if len(target) == 2:
-        if u_mag <= 25 and u_mag > 3:
-          v *= translate(u_mag,3,25,0.4,1.0)
-        elif u_mag <= 3:
+        if u_mag <= 35 and u_mag > 5:
+          v *= translate(u_mag,5,25,0.2,1.0)
+        elif u_mag <= 5:
           v *= 0.0
           phi_e *= 0.0
           target=[]
           pub_target.publish(True) # request new target list from task_tracking node
-      elif u_mag <= 3:
+      elif u_mag <= 5:
         del target[0]
         del target[0]
     
     omega_A = (2*v + phi_e * L)/(2*R)
     omega_B = (2*v - phi_e * L)/(2*R)
-    #print(v, phi_e)
-    #print(omega_A, omega_B)
-    # pub.publish(Reference(v, phi_e))
-    pub_cmd_vel.publish(Reference(omega_A, omega_B))
+    command = str(omega_A)+'&'+str(omega_B)
+    serial_send_command.write(command.encode()) # format is:  desired speed on motor A & desired speed on motor B
+  rate.sleep()

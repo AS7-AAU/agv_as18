@@ -1,0 +1,5 @@
+<launch>
+  <node name="line_following_test" pkg="agv_as18" type="line_following.py" output="screen"/>
+  <node name="trajectory_generation" pkg="agv_as18" type="trajectory_generation.py" output="screen"/>
+  <node name="vicon_agv" pkg="agv_as18" type="vicon.py" output="screen"/>
+</launch>

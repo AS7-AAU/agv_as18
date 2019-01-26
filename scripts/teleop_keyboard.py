@@ -1,10 +1,9 @@
 #!/usr/bin/env python
 import rospy
-from agv_as18.msg import Motor as motor
-
+import serial
 import sys, select, termios, tty
 
-max_ang_vel = 22.0
+max_ang_vel = 48.0
 
 msg = """
 Reading from the keyboard  and Publishing to Twist!
@@ -38,8 +37,9 @@ def getKey():
 if __name__=="__main__":
     settings = termios.tcgetattr(sys.stdin)
 
-    pub = rospy.Publisher('motor_signal', motor, queue_size = 1)
     rospy.init_node('teleop_keyboard')
+    serial_send_command = serial.Serial("/dev/ttyACM0",250000) #TODO: match baudrate with the one in the arduino code
+    rospy.sleep(2)
 
     a = 0.0
     b = 0.0
@@ -57,18 +57,12 @@ if __name__=="__main__":
                 if (key == '\x03'):
                     break
 
-            msg = motor()
-            msg.a = a
-            msg.b = b
-            pub.publish(msg)
+            command = str(a)+'&'+str(b)
+            serial_send_command.write(command.encode()) # format is:  desired speed on motor A & desired speed on motor B
 
     except Exception as e:
         print(e)
 
     finally:
-        msg = motor()
-        msg.a = 0.0
-        msg.b = 0.0
-        pub.publish(msg)
-
+        serial_send_command.write('0.0&0.0'.encode()) # format is:  desired speed on motor A & desired speed on motor B
         termios.tcsetattr(sys.stdin, termios.TCSADRAIN, settings)
