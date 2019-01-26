@@ -8,7 +8,7 @@ import serial
 MAX_ANG_VEL = 48.0
 R = 2.0
 L = 12.5
-phi_threshold = 0.07
+phi_threshold = 0.2
 Kp = MAX_ANG_VEL/9.8175
 max_speed = (MAX_ANG_VEL * 2.0 * R - phi_threshold * L) / 2.0
 
@@ -101,7 +101,7 @@ while not rp.is_shutdown():
       v = 0.0
       omega = phi_e * Kp * pi / abs(phi_e)
       if abs(phi_e) <= 1.0:
-        omega *= translate(abs(phi_e),phi_threshold,1.0,0.2,0.5)
+        omega *= translate(abs(phi_e),phi_threshold,1.0,0.2,0.8)
     else:
       v = max_speed
       omega = phi_e
