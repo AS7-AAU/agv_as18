@@ -8,7 +8,7 @@ import serial
 MAX_ANG_VEL = 48.0
 R = 2.0
 L = 12.5
-phi_threshold = 0.2
+phi_threshold = 0.07
 Kp = MAX_ANG_VEL/9.8175
 max_speed = (MAX_ANG_VEL * 2.0 * R - phi_threshold * L) / 2.0
 
