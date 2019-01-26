@@ -59,11 +59,11 @@ while not rp.is_shutdown():
     if state == 1:
       state = 2
     elif state == 2:
-      if abs(phi_e) <= 0.5:
+      if abs(phi_e) <= 0.4:
         state = 3
       else:
         v = 0
-        omega = phi_e * Kp * 0.5
+        omega = phi_e * Kp * 0.4
         omega_A = (2*v + omega * L)/(2*R)
         omega_B = (2*v - omega * L)/(2*R)
         command = str(omega_A)+'&'+str(omega_B)
