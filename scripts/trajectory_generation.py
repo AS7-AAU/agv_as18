@@ -63,7 +63,7 @@ while not rp.is_shutdown():
         state = 3
       else:
         v = 0
-        omega = phi_e * Kp
+        omega = phi_e * Kp * 0.6
         omega_A = (2*v + omega * L)/(2*R)
         omega_B = (2*v - omega * L)/(2*R)
         command = str(omega_A)+'&'+str(omega_B)
