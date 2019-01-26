@@ -63,7 +63,7 @@ while not rp.is_shutdown():
         state = 3
       else:
         v = 0
-        omega = phi_e * Kp * 0.6
+        omega = phi_e * Kp
         omega_A = (2*v + omega * L)/(2*R)
         omega_B = (2*v - omega * L)/(2*R)
         command = str(omega_A)+'&'+str(omega_B)
@@ -74,7 +74,7 @@ while not rp.is_shutdown():
         state = 4
       else:
         v = 0
-        omega = phi_e * Kp #* translate(abs(phi_e),phi_threshold,0.5,0.2,1.0)
+        omega = phi_e * Kp * translate(abs(phi_e),phi_threshold,0.5,0.4,0.8)
         omega_A = (2*v + omega * L)/(2*R)
         omega_B = (2*v - omega * L)/(2*R)
         command = str(omega_A)+'&'+str(omega_B)
@@ -117,9 +117,9 @@ while not rp.is_shutdown():
         else:
           del target[0]
           del target[0]
-          serial_send_command.write('0&0'.encode())
+          # serial_send_command.write('0&0'.encode())
           state = 1
-          rp.sleep(0.1)
+          # rp.sleep(0.1)
       else:
         state = 1
 
