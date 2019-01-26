@@ -40,7 +40,7 @@ rp.init_node('trajectory_generation')
 rp.Subscriber('local_pos_ref', Transform, pos_ref_cb)
 rp.Subscriber('nodes', Float32MultiArray, waypoints_cb)
 pub_target=rp.Publisher('arrived_at_target', Bool, queue_size=1)
-rate = rp.Rate(100)
+rate = rp.Rate(200)
 serial_send_command = serial.Serial("/dev/ttyACM0",250000) #TODO: match baudrate with the one in the arduino code
 rp.sleep(2)
 
@@ -101,7 +101,7 @@ while not rp.is_shutdown():
       v = 0.0
       omega = phi_e * Kp * pi / abs(phi_e)
       if abs(phi_e) <= 1.0:
-        omega *= translate(abs(phi_e),phi_threshold,1.0,0.2,0.8)
+        omega *= translate(abs(phi_e),phi_threshold,1.0,0.05,0.8)
     else:
       v = max_speed
       omega = phi_e
