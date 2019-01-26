@@ -8,7 +8,7 @@ import serial
 MAX_ANG_VEL = 48.0
 R = 2.0
 L = 12.5
-phi_threshold = 0.07
+phi_threshold = 0.15
 Kp = MAX_ANG_VEL/9.8175
 max_speed = (MAX_ANG_VEL * 2.0 * R - phi_threshold * L) / 2.0
 
@@ -74,14 +74,14 @@ while not rp.is_shutdown():
         state = 4
       else:
         v = 0
-        omega = phi_e * Kp * translate(abs(phi_e),phi_threshold,0.5,0.4,0.8)
+        omega = phi_e * Kp #* translate(abs(phi_e),phi_threshold,0.5,0.4,0.8)
         omega_A = (2*v + omega * L)/(2*R)
         omega_B = (2*v - omega * L)/(2*R)
         command = str(omega_A)+'&'+str(omega_B)
         print(command)
         serial_send_command.write(command.encode())
     elif state == 4:
-      if abs(phi_e) > 0.2:
+      if abs(phi_e) > 0.3:
         state = 5
       elif u_mag <= 35:
         state = 6
