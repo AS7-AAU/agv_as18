@@ -10,7 +10,7 @@ R = 2.0
 L = 12.5
 phi_threshold = 0.1
 Kp = MAX_ANG_VEL/9.8175
-max_speed = (MAX_ANG_VEL * 2.0 * R - phi_threshold * L) / 2.0
+max_speed = (MAX_ANG_VEL * 2.0 * R - phi_threshold * L) / 2.0 - 10.0
 
 beast=[0.0,0.0,0.0]
 target=[]
@@ -87,7 +87,7 @@ while not rp.is_shutdown():
         state = 6
       else:
         v = max_speed
-        omega = phi_e
+        omega = phi_e * Kp
         omega_A = (2*v + omega * L)/(2*R)
         omega_B = (2*v - omega * L)/(2*R)
         command = str(omega_A)+'&'+str(omega_B)
@@ -99,7 +99,7 @@ while not rp.is_shutdown():
       # rp.sleep(0.1)
     elif state == 6:
       v = max_speed
-      omega = phi_e
+      omega = phi_e * Kp
       if abs(phi_e) > 0.25:
         state = 5
       else:
