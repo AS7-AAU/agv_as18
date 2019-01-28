@@ -6,13 +6,13 @@ from math import sin, cos, pi, sqrt, atan2
 import serial
 
 MAX_ANG_VEL = 48.0
-R = 2
+R = 2.0
 L = 12.5
-phi_threshold = 0.07
+phi_threshold = 0.1
 Kp = MAX_ANG_VEL/9.8175
-max_speed = (MAX_ANG_VEL * 2.0 * R - phi_threshold * L) / 2.0
+max_speed = (MAX_ANG_VEL * 2.0 * R - phi_threshold * L) / 2.0 - 10.0
 
-beast=[0.0,0.0,-pi/2]
+beast=[0.0,0.0,0.0]
 target=[]
 
 def translate(value, leftMin, leftMax, rightMin, rightMax):
@@ -29,7 +29,7 @@ def pos_ref_cb(data):
   global beast
   beast[0] = data.translation.x # x-coordinate
   beast[1] = data.translation.y # y-coordinate
-  beast[2] = data.rotation.z-pi/2 # heading
+  beast[2] = data.rotation.z # heading
 
 def waypoints_cb(data):
   global target
@@ -44,6 +44,8 @@ rate = rp.Rate(100)
 serial_send_command = serial.Serial("/dev/ttyACM0",250000) #TODO: match baudrate with the one in the arduino code
 rp.sleep(2)
 
+state = 1
+
 while not rp.is_shutdown():
   if len(target) > 1:
     P = [target[0], target[1]] # target
@@ -53,27 +55,101 @@ while not rp.is_shutdown():
     e = phi_d - beast[2] # difference between desired and current heading
     phi_e = atan2(sin(e),cos(e)) # 4-quadrant angle of e
 
-    if abs(phi_e) > phi_threshold:
-      v = 0
-      phi_e *= Kp
-      if abs(phi_e) < 0.5:
-        phi_e *= translate(abs(phi_e),phi_threshold,0.5,0.2,1.0)
-    else:
+    global state
+    if state == 1:
+      state = 2
+    elif state == 2:
+      if abs(phi_e) <= 0.5:
+        state = 3
+      else:
+        v = 0
+        omega = phi_e * Kp * 0.5
+        omega_A = (2*v + omega * L)/(2*R)
+        omega_B = (2*v - omega * L)/(2*R)
+        command = str(omega_A)+'&'+str(omega_B)
+        print(command)
+        serial_send_command.write(command.encode())
+    elif state == 3:
+      if abs(phi_e) <= phi_threshold:
+        state = 4
+      else:
+        v = 0
+        omega = phi_e * Kp #* translate(abs(phi_e),phi_threshold,0.5,0.4,0.8)
+        omega_A = (2*v + omega * L)/(2*R)
+        omega_B = (2*v - omega * L)/(2*R)
+        command = str(omega_A)+'&'+str(omega_B)
+        print(command)
+        serial_send_command.write(command.encode())
+    elif state == 4:
+      if abs(phi_e) > 0.25:
+        state = 5
+      elif u_mag <= 35:
+        state = 6
+      else:
+        v = max_speed
+        omega = phi_e * Kp
+        omega_A = (2*v + omega * L)/(2*R)
+        omega_B = (2*v - omega * L)/(2*R)
+        command = str(omega_A)+'&'+str(omega_B)
+        print(command)
+        serial_send_command.write(command.encode())
+    elif state == 5:
+      # serial_send_command.write('0&0'.encode())
+      state = 2
+      # rp.sleep(0.1)
+    elif state == 6:
       v = max_speed
-      if len(target) == 2:
+      omega = phi_e * Kp
+      if abs(phi_e) > 0.25:
+        state = 5
+      else:
         if u_mag <= 35 and u_mag > 5:
-          v *= translate(u_mag,5,25,0.2,1.0)
+          v *= translate(u_mag,5,35,0.2,1.0)
+          omega_A = (2*v + omega * L)/(2*R)
+          omega_B = (2*v - omega * L)/(2*R)
+          command = str(omega_A)+'&'+str(omega_B)
+          print(command)
+          serial_send_command.write(command.encode())
         elif u_mag <= 5:
-          v *= 0.0
-          phi_e *= 0.0
-          target=[]
-          pub_target.publish(True) # request new target list from task_tracking node
-      elif u_mag <= 5:
-        del target[0]
-        del target[0]
+          if len(target) == 2:
+            target=[]
+            pub_target.publish(True) # request new target list from task_tracking node
+            serial_send_command.write('0&0'.encode())
+            state = 1
+            rp.sleep(0.1)
+          else:
+            del target[0]
+            del target[0]
+            # serial_send_command.write('0&0'.encode())
+            state = 1
+            # rp.sleep(0.1)
+        else:
+          state = 1
+
+    # if abs(phi_e) > phi_threshold:
+    #   v = 0.0
+    #   omega = phi_e * Kp * pi / abs(phi_e)
+    #   if abs(phi_e) <= 1.0:
+    #     omega *= translate(abs(phi_e),phi_threshold,1.0,0.05,0.8)
+    # else:
+    #   v = max_speed
+    #   omega = phi_e
+    #   if u_mag <= 35 and u_mag > 5:
+    #     v *= translate(u_mag,5,35,0.2,1.0)
+    #   elif u_mag <= 5:
+    #     v *= 0.0
+    #     omega *= 0.0
+    #     if len(target) == 2:
+    #       target=[]
+    #       pub_target.publish(True) # request new target list from task_tracking node
+    #     else:
+    #       del target[0]
+    #       del target[0]
     
-    omega_A = (2*v + phi_e * L)/(2*R)
-    omega_B = (2*v - phi_e * L)/(2*R)
-    command = str(omega_A)+'&'+str(omega_B)
-    serial_send_command.write(command.encode()) # format is:  desired speed on motor A & desired speed on motor B
+    # omega_A = (2*v + omega * L)/(2*R)
+    # omega_B = (2*v - omega * L)/(2*R)
+    # command = str(omega_A)+'&'+str(omega_B)
+    # print(command)
+    # serial_send_command.write(command.encode()) # format is:  desired speed on motor A & desired speed on motor B
+  print(state)
   rate.sleep()
